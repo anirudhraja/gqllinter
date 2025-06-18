@@ -1,8 +1,8 @@
 # GraphQL Schema Linter
 
-[![CI](https://github.com/gqllinter/gqllinter/workflows/CI/badge.svg)](https://github.com/gqllinter/gqllinter/workflows/ci.yml)
-[![Go Report Card](https://goreportcard.com/badge/github.com/gqllinter/gqllinter)](https://goreportcard.com/report/github.com/gqllinter/gqllinter)
-[![GoDoc](https://godoc.org/github.com/gqllinter/gqllinter?status.svg)](https://godoc.org/github.com/gqllinter/gqllinter)
+[![CI](https://github.com/anirudhraja/gqllinter/actions/workflows/ci.yml/badge.svg)](https://github.com/anirudhraja/gqllinter/actions/workflows/ci.yml)
+[![Go Report Card](https://goreportcard.com/badge/github.com/anirudhraja/gqllinter)](https://goreportcard.com/report/github.com/anirudhraja/gqllinter)
+[![Go Reference](https://pkg.go.dev/badge/github.com/anirudhraja/gqllinter.svg)](https://pkg.go.dev/github.com/anirudhraja/gqllinter)
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](LICENSE)
 
 A comprehensive GraphQL schema linter that helps enforce schema design best practices, based on [Yelp's GraphQL guidelines](https://yelp.github.io/graphql-guidelines/schema-design.html) and other industry standards.

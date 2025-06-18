@@ -3,7 +3,7 @@ package rules
 import (
 	"testing"
 
-	"github.com/gqllinter/pkg/types"
+	"github.com/anirudhraja/gqllinter/pkg/types"
 	"github.com/vektah/gqlparser/v2"
 	"github.com/vektah/gqlparser/v2/ast"
 )

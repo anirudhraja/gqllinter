@@ -7,8 +7,8 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/gqllinter/pkg/linter"
-	"github.com/gqllinter/pkg/types"
+	"github.com/anirudhraja/gqllinter/pkg/linter"
+	"github.com/anirudhraja/gqllinter/pkg/types"
 	"github.com/spf13/cobra"
 )
 

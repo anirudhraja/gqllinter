@@ -3,7 +3,7 @@ package main
 import (
 	"os"
 
-	"github.com/gqllinter/cmd"
+	"github.com/anirudhraja/gqllinter/cmd"
 )
 
 func main() {

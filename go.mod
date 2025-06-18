@@ -1,4 +1,4 @@
-module github.com/gqllinter
+module github.com/anirudhraja/gqllinter
 
 go 1.21
 

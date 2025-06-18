@@ -9,8 +9,8 @@ import (
 	"github.com/vektah/gqlparser/v2"
 	"github.com/vektah/gqlparser/v2/ast"
 
-	"github.com/gqllinter/pkg/rules"
-	"github.com/gqllinter/pkg/types"
+	"github.com/anirudhraja/gqllinter/pkg/rules"
+	"github.com/anirudhraja/gqllinter/pkg/types"
 )
 
 // Linter provides GraphQL schema linting functionality
