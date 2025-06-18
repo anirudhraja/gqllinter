@@ -1,0 +1,84 @@
+"""
+Comprehensive test schema for all GraphQL linter rules
+"""
+type Query {
+  # Should trigger no-query-prefixes rule
+  getUser(id: ID!): User
+  listUsers: [User!]!
+  findProducts: [Product!]!
+  
+  users: [User!]! 
+  products: [Product!]!
+}
+
+type Mutation {
+  # Should trigger input-name rule - wrong arg name and type name
+  createUser(data: CreateUserData!): User
+  
+  # Should trigger input-name rule - multiple arguments
+  updateUser(id: ID!, name: String, email: String): User
+  
+  # Should trigger no-scalar-result-type-on-mutation
+  deleteUser(input: DeleteUserInput!): Boolean
+}
+
+# descriptions should start with capital letters for capitalized-descriptions rule
+type User {
+  id: ID!
+  name: String!
+  # lowercase description should trigger capitalized-descriptions
+  """user's email address"""
+  email: String!
+  status: UserStatus  # Should trigger enum-unknown-case (missing UNKNOWN)
+  role: RoleInput     # Should trigger input-enum-suffix (input enum used in output)
+}
+
+type Product {
+  id: ID!
+  name: String!
+  price: Float!
+}
+
+# Should trigger no-unused-types (UnusedType is never referenced)
+type UnusedType {
+  id: ID!
+  value: String!
+}
+
+# Should trigger enum-descriptions (missing descriptions on enum values)
+enum UserStatus {
+  ACTIVE
+  INACTIVE  
+  SUSPENDED
+}
+
+# Input enum without "Input" suffix - should trigger input-enum-suffix
+enum Role {
+  USER
+  ADMIN
+  MODERATOR
+}
+
+# Input enum used in both contexts
+enum RoleInput {
+  USER
+  ADMIN
+  MODERATOR
+}
+
+input CreateUserData {
+  name: String!
+  email: String!
+  role: Role  # Input enum usage
+}
+
+input UpdateUserInput {
+  name: String
+  email: String
+  role: RoleInput  # Input enum usage
+}
+
+input DeleteUserInput {
+  id: ID!
+  reason: String
+} 

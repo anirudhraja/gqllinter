@@ -1,0 +1,17 @@
+type User {
+  id: ID!
+  userId: String!    # Should trigger field-id-suffix rule
+  name: String!
+  profileId: String  # Should trigger field-id-suffix rule
+}
+
+type Profile {
+  id: ID!
+  displayName: String!
+  avatarUrl: String
+}
+
+input CreateUserInput {
+  name: String!
+  profileId: String!  # Should trigger field-id-suffix rule
+} 

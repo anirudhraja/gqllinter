@@ -1,0 +1,106 @@
+# This is a hashtag comment - should be flagged by no-hashtag-description
+
+"""A user in the system"""
+type User {
+    """User's unique identifier"""
+    id: ID!
+    
+    """user's display name"""
+    name: String!
+    
+    """User's email address"""
+    email: String!
+    
+    userName: String
+    
+    """User's tags"""
+    tags: [String]
+    
+    """User's status"""
+    status: UserStatus!
+    
+    """User's role"""
+    role: Role!
+    
+    """Deprecated field"""
+    oldField: String @deprecated
+}
+
+type UserProfile {
+    bio: String!
+    avatar: String!
+}
+
+"""User status enumeration"""
+enum UserStatus {
+    ACTIVE
+    INACTIVE
+}
+
+enum Role {
+    UNKNOWN
+    INVALID
+    USER
+    ADMIN
+}
+
+"""Query root type"""
+type Query {
+    """Get a user by ID"""
+    getUser(id: ID!): User
+    
+    """List all users"""
+    listUsers: [User!]!
+    
+    """Find users by name"""
+    findUsers(name: String!): [User!]!
+    
+    user: User
+    users: [User!]!
+    profile: UserProfile
+}
+
+"""Mutation root type"""
+type Mutation {
+    """Create a new user"""
+    createUser(data: CreateUserData!): Boolean
+    
+    """Update user profile"""
+    updateUser(input: UpdateUserInput!): UpdateUserResult!
+}
+
+input CreateUserData {
+    name: String!
+    email: String!
+    role: Role!
+}
+
+"""Input for updating user"""
+input UpdateUserInput {
+    name: String
+    email: String
+    role: RoleInput!
+}
+
+"""Enum for input operations"""
+enum RoleInput {
+    USER
+    ADMIN
+}
+
+"""Result of user update operation"""
+type UpdateUserResult {
+    """Updated user"""
+    user: User!
+    
+    """Success status"""
+    success: Boolean!
+}
+
+type UnusedType {
+    value: String!
+}
+
+type Data {
+    content: String!
+} 

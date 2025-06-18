@@ -1,0 +1,34 @@
+"""
+Test schema for Guild rules
+"""
+type Query {
+  user(id: ID!): User
+  users: [User!]!
+}
+
+type Mutation {
+  # This should trigger input-name rule - argument should be "input" not "data"
+  createUser(data: CreateUserData!): User
+  
+  # This should trigger input-name rule - input type should be "UpdateUserInput" not "UserUpdate"  
+  updateUser(input: UserUpdate!): User
+  
+  # This should trigger input-name rule - multiple arguments should be consolidated
+  deleteUser(id: ID!, force: Boolean): Boolean
+}
+
+type User {
+  id: ID!
+  name: String!
+  email: String!
+}
+
+input CreateUserData {
+  name: String!
+  email: String!
+}
+
+input UserUpdate {
+  name: String
+  email: String
+} 

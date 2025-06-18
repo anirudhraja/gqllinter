@@ -2,182 +2,161 @@ package linter
 
 import (
 	"fmt"
-	"io/ioutil"
+	"os"
 	"path/filepath"
 	"plugin"
 
 	"github.com/vektah/gqlparser/v2"
 	"github.com/vektah/gqlparser/v2/ast"
-	"github.com/vektah/gqlparser/v2/parser"
 
 	"github.com/gqllinter/pkg/rules"
 	"github.com/gqllinter/pkg/types"
 )
 
-// Linter holds the configuration and rules for linting GraphQL schemas
+// Linter provides GraphQL schema linting functionality
 type Linter struct {
-	rules        map[string]types.Rule
-	enabledRules []string
+	rules        []types.Rule
+	enabledRules map[string]bool
 }
 
-// New creates a new linter instance with default rules
+// New creates a new linter instance with all built-in rules
 func New() *Linter {
-	l := &Linter{
-		rules: make(map[string]types.Rule),
+	return &Linter{
+		rules: []types.Rule{
+			// Yelp guidelines rules
+			rules.NewTypesHaveDescriptions(),
+			rules.NewFieldsHaveDescriptions(),
+			rules.NewNoHashtagDescription(),
+			rules.NewNamingConvention(),
+			rules.NewNoFieldNamespacing(),
+			rules.NewMinimalTopLevelQueries(),
+
+			// Guild-inspired rules
+			rules.NewNoUnusedFields(),
+			rules.NewRequireDeprecationReason(),
+			rules.NewNoScalarResultTypeOnMutation(),
+			rules.NewAlphabetize(),
+			rules.NewInputName(),
+
+			// Additional comprehensive rules
+			rules.NewNoUnusedTypes(),
+			rules.NewCapitalizedDescriptions(),
+			rules.NewEnumUnknownCase(),
+			rules.NewNoQueryPrefixes(),
+			rules.NewInputEnumSuffix(),
+			rules.NewEnumDescriptions(),
+
+			// Additional best practice rules
+			rules.NewListNonNullItems(),
+			rules.NewEnumReservedValues(),
+			rules.NewMutationResponseNullable(),
+		},
+		enabledRules: make(map[string]bool),
 	}
-
-	// Register built-in rules
-	l.registerBuiltinRules()
-
-	return l
 }
 
-// registerBuiltinRules adds all the built-in rules to the linter
-func (l *Linter) registerBuiltinRules() {
-	builtinRules := []types.Rule{
-		rules.NewTypesHaveDescriptions(),
-		rules.NewFieldsHaveDescriptions(),
-		rules.NewNoHashtagDescription(),
-		rules.NewNamingConvention(),
-	}
-
-	for _, rule := range builtinRules {
-		l.rules[rule.Name()] = rule
-	}
-}
-
-// LoadCustomRules loads custom rules from a directory
-func (l *Linter) LoadCustomRules(dir string) error {
-	files, err := filepath.Glob(filepath.Join(dir, "*.so"))
+// LoadCustomRules loads custom rules from a directory containing Go plugins
+func (l *Linter) LoadCustomRules(customRulesDir string) error {
+	pluginFiles, err := filepath.Glob(filepath.Join(customRulesDir, "*.so"))
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to find plugin files: %w", err)
 	}
 
-	for _, file := range files {
-		if err := l.loadCustomRule(file); err != nil {
-			// Log warning but don't fail completely
-			fmt.Printf("Warning: failed to load custom rule %s: %v\n", file, err)
+	for _, pluginFile := range pluginFiles {
+		if err := l.loadPlugin(pluginFile); err != nil {
+			return fmt.Errorf("failed to load plugin %s: %w", pluginFile, err)
 		}
 	}
 
 	return nil
 }
 
-// loadCustomRule loads a single custom rule from a shared library
-func (l *Linter) loadCustomRule(path string) error {
-	p, err := plugin.Open(path)
+// loadPlugin loads a single Go plugin file
+func (l *Linter) loadPlugin(pluginPath string) error {
+	// Load the plugin
+	p, err := plugin.Open(pluginPath)
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to open plugin: %w", err)
 	}
 
-	symbol, err := p.Lookup("NewRule")
+	// Look for the NewRule function
+	newRuleSymbol, err := p.Lookup("NewRule")
 	if err != nil {
-		return err
+		return fmt.Errorf("plugin must export NewRule function: %w", err)
 	}
 
-	newRuleFunc, ok := symbol.(func() types.Rule)
+	// Cast to expected function signature
+	newRuleFunc, ok := newRuleSymbol.(func() types.Rule)
 	if !ok {
-		return fmt.Errorf("invalid NewRule function signature")
+		return fmt.Errorf("NewRule must be a function that returns types.Rule")
 	}
 
+	// Create the rule and add it to our rules list
 	rule := newRuleFunc()
-	l.rules[rule.Name()] = rule
+	l.rules = append(l.rules, rule)
 
 	return nil
 }
 
-// SetRules configures which rules should be enabled
+// SetRules enables only the specified rules
 func (l *Linter) SetRules(ruleNames []string) {
-	l.enabledRules = ruleNames
+	l.enabledRules = make(map[string]bool)
+	for _, name := range ruleNames {
+		l.enabledRules[name] = true
+	}
 }
 
 // LintFile lints a single GraphQL schema file
 func (l *Linter) LintFile(filename string) ([]types.LintError, error) {
-	content, err := ioutil.ReadFile(filename)
+	// Read and parse the schema
+	schema, source, err := l.parseSchemaFile(filename)
 	if err != nil {
 		return nil, err
 	}
 
-	return l.LintString(string(content), filename)
+	// Run all enabled rules
+	var errors []types.LintError
+	for _, rule := range l.rules {
+		// Skip rule if specific rules are set and this rule is not enabled
+		if len(l.enabledRules) > 0 && !l.enabledRules[rule.Name()] {
+			continue
+		}
+
+		ruleErrors := rule.Check(schema, source)
+		errors = append(errors, ruleErrors...)
+	}
+
+	return errors, nil
 }
 
-// LintString lints GraphQL schema content
-func (l *Linter) LintString(content, filename string) ([]types.LintError, error) {
+// parseSchemaFile reads and parses a GraphQL schema file
+func (l *Linter) parseSchemaFile(filename string) (*ast.Schema, *ast.Source, error) {
+	// Read file content
+	content, err := os.ReadFile(filename)
+	if err != nil {
+		return nil, nil, fmt.Errorf("failed to read file %s: %w", filename, err)
+	}
+
+	// Create source from file
 	source := &ast.Source{
-		Name:    filename,
-		Input:   content,
-		BuiltIn: false,
+		Name:  filename,
+		Input: string(content),
 	}
 
 	// Parse the schema
-	_, gqlErr := parser.ParseSchema(source)
-	if gqlErr != nil {
-		// Convert parser errors to lint errors
-		var errors []types.LintError
-
-		// Handle gqlerror.List
-		if gqlErrList, ok := gqlErr.(interface{ GetErrors() []error }); ok {
-			for _, err := range gqlErrList.GetErrors() {
-				errors = append(errors, types.LintError{
-					Message: err.Error(),
-					Location: types.Location{
-						Line:   1,
-						Column: 1,
-						File:   filename,
-					},
-					Rule: "syntax-error",
-				})
-			}
-		} else {
-			errors = append(errors, types.LintError{
-				Message: gqlErr.Error(),
-				Location: types.Location{
-					Line:   1,
-					Column: 1,
-					File:   filename,
-				},
-				Rule: "syntax-error",
-			})
-		}
-		return errors, nil
-	}
-
-	// Build schema
 	schema, err := gqlparser.LoadSchema(source)
 	if err != nil {
-		return nil, fmt.Errorf("failed to build schema: %w", err)
+		return nil, nil, fmt.Errorf("failed to parse schema: %w", err)
 	}
 
-	// Run enabled rules
-	var allErrors []types.LintError
-	rulesToRun := l.getRulesToRun()
-
-	for _, ruleName := range rulesToRun {
-		if rule, exists := l.rules[ruleName]; exists {
-			errors := rule.Check(schema, source)
-			allErrors = append(allErrors, errors...)
-		}
-	}
-
-	return allErrors, nil
+	return schema, source, nil
 }
 
-// getRulesToRun returns the list of rules that should be executed
-func (l *Linter) getRulesToRun() []string {
-	if len(l.enabledRules) > 0 {
-		return l.enabledRules
-	}
-
-	// Return all available rules if none specified
+// GetAvailableRules returns all available rule names
+func (l *Linter) GetAvailableRules() []string {
 	var ruleNames []string
-	for name := range l.rules {
-		ruleNames = append(ruleNames, name)
+	for _, rule := range l.rules {
+		ruleNames = append(ruleNames, rule.Name())
 	}
-
 	return ruleNames
-}
-
-// GetAvailableRules returns all available rules
-func (l *Linter) GetAvailableRules() map[string]types.Rule {
-	return l.rules
 }

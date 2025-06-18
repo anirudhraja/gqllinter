@@ -1,0 +1,104 @@
+type Query {
+  # This should trigger list-non-null-items rule
+  tags: [String]
+  categories: [Category]
+  
+  # This is correct
+  users: [User!]!
+}
+
+type Mutation {
+  # This should trigger mutation-response-nullable rule
+  createUser(input: CreateUserInput!): CreateUserResponse!
+  
+  # This should also trigger mutation-response-nullable
+  updateProfile(input: UpdateProfileInput!): UpdateProfileResponse!
+}
+
+# This should trigger enum-reserved-values rule
+enum UserStatus {
+  ACTIVE
+  INACTIVE
+  UNKNOWN  # Reserved value
+  SUSPENDED
+}
+
+# This should trigger enum-reserved-values rule
+enum OrderStatus {
+  PENDING
+  COMPLETED
+  CANCELLED
+  INVALID  # Reserved value
+  REFUNDED
+}
+
+type CreateUserResponse {
+  # Non-null fields in mutation response - should trigger rule
+  success: Boolean!
+  user: User!
+  errors: [String!]
+}
+
+type UpdateProfileResponse {
+  # Non-null fields in mutation response - should trigger rule
+  profile: Profile!
+  updatedAt: String!
+}
+
+type User {
+  id: ID!
+  email: String!
+  profile: Profile
+  
+  # This should trigger list-non-null-items rule
+  permissions: [Permission]
+  hobbies: [String]
+}
+
+type Profile {
+  id: ID!
+  displayName: String!
+  bio: String
+  
+  # Correct list usage
+  badges: [Badge!]!
+}
+
+type Category {
+  id: ID!
+  name: String!
+  
+  # This should trigger list-non-null-items rule
+  subcategories: [Category]
+}
+
+type Permission {
+  id: ID!
+  name: String!
+  scope: String
+}
+
+type Badge {
+  id: ID!
+  name: String!
+  description: String
+}
+
+input CreateUserInput {
+  email: String!
+  password: String!
+  profile: ProfileInput
+}
+
+input UpdateProfileInput {
+  displayName: String
+  bio: String
+  
+  # This should trigger list-non-null-items rule
+  newBadges: [String]
+}
+
+input ProfileInput {
+  displayName: String!
+  bio: String
+} 

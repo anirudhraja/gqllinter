@@ -47,7 +47,7 @@ bin/
 
 # Custom rule plugins (shared libraries)
 plugins/*.so
-custom-rules/*.so
+custom-rules-examples/*.so
 
 # Output files
 output/
