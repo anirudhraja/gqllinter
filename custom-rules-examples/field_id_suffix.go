@@ -69,3 +69,9 @@ func (r *FieldIdSuffixRule) Check(schema *ast.Schema, source *ast.Source) []type
 
 	return errors
 }
+
+// main function is required for package main but not used in plugin mode
+func main() {
+	// This is a plugin file - the main function is not used when built as a plugin
+	// To build as plugin: go build -buildmode=plugin -o field_id_suffix.so field_id_suffix.go
+}
