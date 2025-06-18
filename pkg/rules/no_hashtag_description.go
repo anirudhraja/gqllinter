@@ -1,7 +1,6 @@
 package rules
 
 import (
-	"fmt"
 	"strings"
 
 	"github.com/anirudhraja/gqllinter/pkg/types"
@@ -43,7 +42,7 @@ func (r *NoHashtagDescription) Check(schema *ast.Schema, source *ast.Source) []t
 				nextLine := strings.TrimSpace(lines[i+1])
 				if r.looksLikeDefinition(nextLine) {
 					errors = append(errors, types.LintError{
-						Message: fmt.Sprintf("Use triple quotes (\"\"\") for descriptions instead of hashtag comments."),
+						Message: "Use triple quotes (\"\"\") for descriptions instead of hashtag comments.",
 						Location: types.Location{
 							Line:   i + 1, // 1-indexed
 							Column: strings.Index(line, "#") + 1,

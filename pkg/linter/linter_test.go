@@ -134,7 +134,7 @@ func TestParseSchemaFile(t *testing.T) {
 		if err != nil {
 			t.Fatalf("Failed to create temp file: %v", err)
 		}
-		defer os.Remove(tmpFile)
+		defer func() { _ = os.Remove(tmpFile) }()
 
 		schema, source, err := linter.parseSchemaFile(tmpFile)
 		if err != nil {
@@ -147,9 +147,7 @@ func TestParseSchemaFile(t *testing.T) {
 
 		if source == nil {
 			t.Error("Expected source to be returned, got nil")
-		}
-
-		if source.Name != tmpFile {
+		} else if source.Name != tmpFile {
 			t.Errorf("Expected source name to be %s, got %s", tmpFile, source.Name)
 		}
 	})
@@ -170,7 +168,7 @@ func TestParseSchemaFile(t *testing.T) {
 		if err != nil {
 			t.Fatalf("Failed to create temp file: %v", err)
 		}
-		defer os.Remove(tmpFile)
+		defer func() { _ = os.Remove(tmpFile) }()
 
 		_, _, err = linter.parseSchemaFile(tmpFile)
 		if err == nil {
@@ -191,7 +189,7 @@ func TestLintFile(t *testing.T) {
 		if err != nil {
 			t.Fatalf("Failed to create temp file: %v", err)
 		}
-		defer os.Remove(tmpFile)
+		defer func() { _ = os.Remove(tmpFile) }()
 
 		errors, err := linter.LintFile(tmpFile)
 		if err != nil {
@@ -209,7 +207,7 @@ func TestLintFile(t *testing.T) {
 		if err != nil {
 			t.Fatalf("Failed to create temp file: %v", err)
 		}
-		defer os.Remove(tmpFile)
+		defer func() { _ = os.Remove(tmpFile) }()
 
 		errors, err := linter.LintFile(tmpFile)
 		if err != nil {
@@ -252,7 +250,7 @@ func TestLintFile(t *testing.T) {
 		if err != nil {
 			t.Fatalf("Failed to create temp file: %v", err)
 		}
-		defer os.Remove(tmpFile)
+		defer func() { _ = os.Remove(tmpFile) }()
 
 		// Enable only one rule
 		linter.SetRules([]string{"types-have-descriptions"})
@@ -282,7 +280,7 @@ func TestLintFile(t *testing.T) {
 		if err != nil {
 			t.Fatalf("Failed to create temp file: %v", err)
 		}
-		defer os.Remove(tmpFile)
+		defer func() { _ = os.Remove(tmpFile) }()
 
 		_, err = linter.LintFile(tmpFile)
 		if err == nil {
@@ -313,7 +311,7 @@ func TestLoadCustomRules(t *testing.T) {
 		if err != nil {
 			t.Fatalf("Failed to create temp directory: %v", err)
 		}
-		defer os.RemoveAll(tmpDir)
+		defer func() { _ = os.RemoveAll(tmpDir) }()
 
 		err = linter.LoadCustomRules(tmpDir)
 		if err != nil {
@@ -332,7 +330,7 @@ func TestLoadCustomRules(t *testing.T) {
 		if err != nil {
 			t.Fatalf("Failed to create temp directory: %v", err)
 		}
-		defer os.RemoveAll(tmpDir)
+		defer func() { _ = os.RemoveAll(tmpDir) }()
 
 		// Create a non-plugin file
 		nonPluginFile := filepath.Join(tmpDir, "not-a-plugin.txt")
@@ -373,14 +371,14 @@ func TestLoadPlugin(t *testing.T) {
 		if err != nil {
 			t.Fatalf("Failed to create temp file: %v", err)
 		}
-		defer os.Remove(tmpFile.Name())
+		defer func() { _ = os.Remove(tmpFile.Name()) }()
 
 		// Write some invalid content
 		_, err = tmpFile.WriteString("not a valid plugin")
 		if err != nil {
 			t.Fatalf("Failed to write to temp file: %v", err)
 		}
-		tmpFile.Close()
+		_ = tmpFile.Close()
 
 		err = linter.loadPlugin(tmpFile.Name())
 		if err == nil {
@@ -398,12 +396,12 @@ func createTempSchemaFile(t *testing.T, content string) (string, error) {
 
 	_, err = tmpFile.WriteString(content)
 	if err != nil {
-		tmpFile.Close()
-		os.Remove(tmpFile.Name())
+		_ = tmpFile.Close()
+		_ = os.Remove(tmpFile.Name())
 		return "", err
 	}
 
-	tmpFile.Close()
+	_ = tmpFile.Close()
 	return tmpFile.Name(), nil
 }
 
@@ -414,7 +412,7 @@ func BenchmarkLintFile(b *testing.B) {
 	if err != nil {
 		b.Fatalf("Failed to create temp file: %v", err)
 	}
-	defer os.Remove(tmpFile)
+	defer func() { _ = os.Remove(tmpFile) }()
 
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
@@ -431,7 +429,7 @@ func BenchmarkParseSchemaFile(b *testing.B) {
 	if err != nil {
 		b.Fatalf("Failed to create temp file: %v", err)
 	}
-	defer os.Remove(tmpFile)
+	defer func() { _ = os.Remove(tmpFile) }()
 
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
@@ -462,7 +460,7 @@ func TestLinterIntegration(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to create temp file: %v", err)
 	}
-	defer os.Remove(tmpFile)
+	defer func() { _ = os.Remove(tmpFile) }()
 
 	errors, err := linter.LintFile(tmpFile)
 	if err != nil {

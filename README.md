@@ -67,25 +67,6 @@ Flags:
 
 ## Rules Overview
 
-### **Complete Requirements Coverage: 14/14 (100%)**
-
-✅ **Type names are UpperCamelCase** - Covered by `naming-convention` rule  
-✅ **Field names are lowerCamelCase** - Covered by `naming-convention` rule  
-✅ **All declared types must be used** - Covered by `no-unused-types` rule  
-✅ **@deprecated must have a reason** - Covered by `require-deprecation-reason` rule  
-✅ **Descriptions must be capitalized** - Covered by `capitalized-descriptions` rule  
-✅ **All Types must have descriptions** - Covered by `types-have-descriptions` rule  
-✅ **All Fields must have descriptions** - Covered by `fields-have-descriptions` rule  
-✅ **All Enums must have descriptions** - Covered by `types-have-descriptions` rule  
-✅ **All input types must be suffixed with "Input"** - Covered by `input-name` rule  
-✅ **Input enums are distinct from output enums and are suffixed with "Input"** - Covered by `input-enum-suffix` rule  
-✅ **Enum cases must be capitalized** - Covered by `naming-convention` rule  
-✅ **Enum members must have descriptions except for UNKNOWN** - Covered by `enum-descriptions` rule  
-✅ **All enums used in a Type (not an Input) have an UNKNOWN case** - Covered by `enum-unknown-case` rule  
-✅ **Query fields cannot be prefixed with get/list/find** - Covered by `no-query-prefixes` rule  
-
-**Current Guild Rules Coverage: 7/47 rules (~15%)**
-
 ## Implemented Validations
 
 | Rule Name | Category | Description | Example Issue Detected |
