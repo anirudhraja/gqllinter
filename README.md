@@ -1,10 +1,9 @@
 # GraphQL Schema Linter
 
-[![CI](https://github.com/gqllinter/gqllinter/workflows/CI/badge.svg)](https://github.com/gqllinter/gqllinter/actions/workflows/ci.yml)
-[![Go](https://github.com/gqllinter/gqllinter/workflows/Go/badge.svg)](https://github.com/gqllinter/gqllinter/actions/workflows/go.yml)
+[![CI](https://github.com/gqllinter/gqllinter/workflows/CI/badge.svg)](https://github.com/gqllinter/gqllinter/workflows/ci.yml)
 [![Go Report Card](https://goreportcard.com/badge/github.com/gqllinter/gqllinter)](https://goreportcard.com/report/github.com/gqllinter/gqllinter)
 [![GoDoc](https://godoc.org/github.com/gqllinter/gqllinter?status.svg)](https://godoc.org/github.com/gqllinter/gqllinter)
-[![License](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+[![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](LICENSE)
 
 A comprehensive GraphQL schema linter that helps enforce schema design best practices, based on [Yelp's GraphQL guidelines](https://yelp.github.io/graphql-guidelines/schema-design.html) and other industry standards.
 
@@ -818,4 +817,4 @@ This linter is inspired by and follows guidelines from:
 
 ## License
 
-This project is licensed under the Apache License 2.0 - see the [LICENSE](LICENSE) file for details. gi
+This project is licensed under the Apache License 2.0 - see the [LICENSE](LICENSE) file for details.
