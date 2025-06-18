@@ -1,0 +1,22 @@
+# Example GraphQL schema for testing the linter
+
+type QueryRoot {
+  a: String
+  user(id: ID!): User
+}
+
+type User {
+  id: ID!
+  name: String!
+  email: String
+  profile: UserData
+}
+
+type UserData {
+  bio: String
+  avatar_url: String
+}
+
+type Data {
+  info: String
+} 
