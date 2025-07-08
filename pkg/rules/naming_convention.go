@@ -39,7 +39,7 @@ func (r *NamingConvention) Check(schema *ast.Schema, source *ast.Source) []types
 
 	// Check for overly generic type names
 	for _, def := range schema.Types {
-		if def.BuiltIn {
+		if def.BuiltIn || strings.HasPrefix(def.Name, "__") {
 			continue
 		}
 
@@ -82,6 +82,11 @@ func (r *NamingConvention) Check(schema *ast.Schema, source *ast.Source) []types
 	for _, def := range schema.Types {
 		if def.Kind == ast.Object || def.Kind == ast.Interface {
 			for _, field := range def.Fields {
+				// Skip built-in fields and introspection fields
+				if strings.HasPrefix(field.Name, "__") {
+					continue
+				}
+
 				line, column := 1, 1
 				if field.Position != nil {
 					line = field.Position.Line
