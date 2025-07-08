@@ -2,6 +2,7 @@ package rules
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/anirudhraja/gqllinter/pkg/types"
 	"github.com/vektah/gqlparser/v2/ast"
@@ -31,8 +32,17 @@ func (r *FieldsHaveDescriptions) Check(schema *ast.Schema, source *ast.Source) [
 
 	// Check fields in object types
 	for _, def := range schema.Types {
+		// Skip built-in types
+		if def.BuiltIn || strings.HasPrefix(def.Name, "__") {
+			continue
+		}
 		if def.Kind == ast.Object || def.Kind == ast.Interface {
 			for _, field := range def.Fields {
+				// Skip built-in fields and introspection fields
+				if strings.HasPrefix(field.Name, "__") {
+					continue
+				}
+
 				if field.Description == "" {
 					// For fields, position information might not be available in the schema built from source
 					line, column := 1, 1

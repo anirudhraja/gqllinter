@@ -39,14 +39,18 @@ func (r *Alphabetize) Check(schema *ast.Schema, source *ast.Source) []types.Lint
 				continue
 			}
 
-			// Get field names
-			fieldNames := make([]string, len(def.Fields))
-			for i, field := range def.Fields {
-				fieldNames[i] = field.Name
+			// Get field names, filtering out built-in and introspection fields
+			var fieldNames []string
+			for _, field := range def.Fields {
+				// Skip built-in fields and introspection fields
+				if strings.HasPrefix(field.Name, "__") {
+					continue
+				}
+				fieldNames = append(fieldNames, field.Name)
 			}
 
 			// Check if fields are alphabetically ordered
-			if !r.isAlphabeticallyOrdered(fieldNames) {
+			if len(fieldNames) > 1 && !r.isAlphabeticallyOrdered(fieldNames) {
 				line, column := 1, 1
 				if def.Position != nil {
 					line = def.Position.Line
@@ -113,14 +117,18 @@ func (r *Alphabetize) Check(schema *ast.Schema, source *ast.Source) []types.Lint
 				continue
 			}
 
-			// Get field names
-			fieldNames := make([]string, len(def.Fields))
-			for i, field := range def.Fields {
-				fieldNames[i] = field.Name
+			// Get field names, filtering out built-in and introspection fields
+			var fieldNames []string
+			for _, field := range def.Fields {
+				// Skip built-in fields and introspection fields
+				if strings.HasPrefix(field.Name, "__") {
+					continue
+				}
+				fieldNames = append(fieldNames, field.Name)
 			}
 
 			// Check if fields are alphabetically ordered
-			if !r.isAlphabeticallyOrdered(fieldNames) {
+			if len(fieldNames) > 1 && !r.isAlphabeticallyOrdered(fieldNames) {
 				line, column := 1, 1
 				if def.Position != nil {
 					line = def.Position.Line

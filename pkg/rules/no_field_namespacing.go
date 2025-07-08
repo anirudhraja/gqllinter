@@ -39,7 +39,7 @@ func (r *NoFieldNamespacing) Check(schema *ast.Schema, source *ast.Source) []typ
 			}
 
 			for _, field := range def.Fields {
-				// Skip introspection fields
+				// Skip built-in fields and introspection fields
 				if strings.HasPrefix(field.Name, "__") {
 					continue
 				}

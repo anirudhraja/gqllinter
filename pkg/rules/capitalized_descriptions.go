@@ -58,7 +58,7 @@ func (r *CapitalizedDescriptions) Check(schema *ast.Schema, source *ast.Source) 
 
 		// Check field descriptions
 		for _, field := range def.Fields {
-			// Skip introspection fields
+			// Skip built-in fields and introspection fields
 			if strings.HasPrefix(field.Name, "__") {
 				continue
 			}

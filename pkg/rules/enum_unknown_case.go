@@ -95,7 +95,7 @@ func (r *EnumUnknownCase) findOutputEnums(schema *ast.Schema) map[string]bool {
 		// Check object, interface, and union types
 		if def.Kind == ast.Object || def.Kind == ast.Interface || def.Kind == ast.Union {
 			for _, field := range def.Fields {
-				// Skip introspection fields
+				// Skip built-in fields and introspection fields
 				if strings.HasPrefix(field.Name, "__") {
 					continue
 				}
@@ -133,7 +133,7 @@ func (r *EnumUnknownCase) findOutputEnums(schema *ast.Schema) map[string]bool {
 		}
 
 		for _, field := range rootType.Fields {
-			// Skip introspection fields
+			// Skip built-in fields and introspection fields
 			if strings.HasPrefix(field.Name, "__") {
 				continue
 			}

@@ -39,6 +39,11 @@ func (r *RequireDeprecationReason) Check(schema *ast.Schema, source *ast.Source)
 			}
 
 			for _, field := range def.Fields {
+				// Skip built-in fields and introspection fields
+				if strings.HasPrefix(field.Name, "__") {
+					continue
+				}
+
 				// Check if field has @deprecated directive
 				deprecatedDirective := r.findDeprecatedDirective(field.Directives)
 				if deprecatedDirective != nil {
