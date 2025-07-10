@@ -60,6 +60,10 @@ func (r *NoHashtagDescription) Check(schema *ast.Schema, source *ast.Source) []t
 
 // looksLikeDefinition checks if a line looks like a GraphQL definition
 func (r *NoHashtagDescription) looksLikeDefinition(line string) bool {
+	// extend type should have a comment/ description starting with hash (#) and not triple code (""")
+	if strings.HasPrefix(line, "extend type ") {
+		return false
+	}
 	return strings.HasPrefix(line, "type ") ||
 		strings.HasPrefix(line, "interface ") ||
 		strings.HasPrefix(line, "enum ") ||
