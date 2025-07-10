@@ -2,6 +2,7 @@ package rules
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/anirudhraja/gqllinter/pkg/types"
 	"github.com/vektah/gqlparser/v2/ast"
@@ -32,6 +33,12 @@ func (r *TypesHaveDescriptions) Check(schema *ast.Schema, source *ast.Source) []
 	// Check object types
 	for _, def := range schema.Types {
 		if def.Description == "" && !def.BuiltIn {
+			inputArr := strings.Split(def.Position.Src.Input, "\n")
+			pos := def.Position.Line - 1
+			// description with (""") is not supported by GQL for extend type - hence skipping
+			if (pos >= 0 || pos < len(inputArr)) && strings.HasPrefix(strings.TrimSpace(inputArr[pos]), "extend type") {
+				continue
+			}
 			// For types, position information might not be available in the schema built from source
 			// We'll use line 1 as default
 			line, column := 1, 1
