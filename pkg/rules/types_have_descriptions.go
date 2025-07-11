@@ -35,8 +35,8 @@ func (r *TypesHaveDescriptions) Check(schema *ast.Schema, source *ast.Source) []
 		if def.Description == "" && !def.BuiltIn {
 			inputArr := strings.Split(def.Position.Src.Input, "\n")
 			pos := def.Position.Line - 1
-			// description with (""") is not supported by GQL for extend type - hence skipping
-			if (pos >= 0 || pos < len(inputArr)) && strings.HasPrefix(strings.TrimSpace(inputArr[pos]), "extend type") {
+			// description with (""") is not supported by GQL for extend type* - hence skipping
+			if (pos >= 0 || pos < len(inputArr)) && isExtendType(strings.TrimSpace(inputArr[pos])) {
 				continue
 			}
 			// For types, position information might not be available in the schema built from source
@@ -60,4 +60,13 @@ func (r *TypesHaveDescriptions) Check(schema *ast.Schema, source *ast.Source) []
 	}
 
 	return errors
+}
+
+func isExtendType(line string) bool {
+	return strings.HasPrefix(line, "extend type ") ||
+		strings.HasPrefix(line, "extend interface ") ||
+		strings.HasPrefix(line, "extend input ") ||
+		strings.HasPrefix(line, "extend enum ") ||
+		strings.HasPrefix(line, "extend union ") ||
+		strings.HasPrefix(line, "extend scalar ")
 }
