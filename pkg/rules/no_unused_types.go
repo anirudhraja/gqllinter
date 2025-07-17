@@ -53,6 +53,15 @@ func (r *NoUnusedTypes) Check(schema *ast.Schema, source *ast.Source) []types.Li
 		usedTypes[typeName] = true
 	}
 
+	// LinkImport and LinkPurpose is used by @link directive even if not explicitly referenced
+	if linkImportType := schema.Types["LinkImport"]; linkImportType != nil && linkImportType.Kind == ast.Scalar {
+		usedTypes["LinkImport"] = true
+	}
+
+	if linkPurposeType := schema.Types["LinkPurpose"]; linkPurposeType != nil && linkPurposeType.Kind == ast.Scalar {
+		usedTypes["LinkPurpose"] = true
+	}
+
 	// Find all type references throughout the schema
 	r.markTypeUsages(schema, usedTypes)
 
