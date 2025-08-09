@@ -31,10 +31,7 @@ func (r *EnumReservedValues) Check(schema *ast.Schema, source *ast.Source) []typ
 	var errors []types.LintError
 
 	// Reserved enum values for future compatibility
-	reservedValues := []string{
-		"UNKNOWN", "UNSPECIFIED", "INVALID", "NULL", "UNDEFINED",
-		"DEFAULT", "NONE", "EMPTY", "ANY", "ALL",
-	}
+	reservedValues := []string{"INVALID"}
 
 	// Check enum types
 	for _, def := range schema.Types {
@@ -52,10 +49,8 @@ func (r *EnumReservedValues) Check(schema *ast.Schema, source *ast.Source) []typ
 						column = enumValue.Position.Column
 					}
 
-					suggestion := r.suggestAlternative(enumValue.Name, def.Name)
-
 					errors = append(errors, types.LintError{
-						Message: fmt.Sprintf("Enum value `%s.%s` uses a reserved name. Consider `%s` instead to avoid conflicts and maintain extensibility.", def.Name, enumValue.Name, suggestion),
+						Message: fmt.Sprintf("Enum value `%s.%s` uses a reserved name.", def.Name, enumValue.Name),
 						Location: types.Location{
 							Line:   line,
 							Column: column,

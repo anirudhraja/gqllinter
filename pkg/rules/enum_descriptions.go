@@ -43,11 +43,6 @@ func (r *EnumDescriptions) Check(schema *ast.Schema, source *ast.Source) []types
 
 		// Check each enum value
 		for _, enumValue := range def.EnumValues {
-			// Skip the UNKNOWN case - it doesn't need a description
-			if enumValue.Name == "UNKNOWN" {
-				continue
-			}
-
 			// Check if the enum value has a description
 			if enumValue.Description == "" {
 				line, column := 1, 1
@@ -57,7 +52,7 @@ func (r *EnumDescriptions) Check(schema *ast.Schema, source *ast.Source) []types
 				}
 
 				errors = append(errors, types.LintError{
-					Message: fmt.Sprintf("Enum value `%s.%s` is missing a description. All enum values except UNKNOWN should have descriptions.", def.Name, enumValue.Name),
+					Message: fmt.Sprintf("Enum value `%s.%s` is missing a description. All enum values should have descriptions.", def.Name, enumValue.Name),
 					Location: types.Location{
 						Line:   line,
 						Column: column,

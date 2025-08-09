@@ -1,6 +1,8 @@
 package rules
 
 import (
+	"fmt"
+	"strings"
 	"testing"
 
 	"github.com/anirudhraja/gqllinter/pkg/types"
@@ -645,14 +647,13 @@ func TestEnumDescriptions(t *testing.T) {
 	t.Run("should flag enum values without descriptions", func(t *testing.T) {
 		schema := `
 		enum UserStatus {
-			UNKNOWN
 			ACTIVE
 			INACTIVE
 		}
 		`
 		errors := runRule(t, rule, schema)
 		// Should flag ACTIVE and INACTIVE but not UNKNOWN
-		if countRuleErrors(errors, "enum-descriptions") < 2 {
+		if countRuleErrors(errors, "enum-descriptions") != 2 {
 			t.Error("Expected at least 2 errors for enum values without descriptions")
 		}
 	})
@@ -660,7 +661,6 @@ func TestEnumDescriptions(t *testing.T) {
 	t.Run("should pass enum values with descriptions", func(t *testing.T) {
 		schema := `
 		enum UserStatus {
-			UNKNOWN
 			"""User is active"""
 			ACTIVE
 			"""User is inactive"""
@@ -669,7 +669,7 @@ func TestEnumDescriptions(t *testing.T) {
 		`
 		errors := runRule(t, rule, schema)
 		if countRuleErrors(errors, "enum-descriptions") > 0 {
-			t.Error("Expected no enum description errors for described values")
+			t.Error("Expected no errors for described values")
 		}
 	})
 }
@@ -695,6 +695,7 @@ func TestListNonNullItems(t *testing.T) {
 		type User {
 			tags: [String!]!
 			friends: [User!]!
+			users : [[User!]!]
 		}
 		`
 		errors := runRule(t, rule, schema)
@@ -716,14 +717,26 @@ func TestEnumReservedValues(t *testing.T) {
 		}
 		`
 		errors := runRule(t, rule, schema)
-		if countRuleErrors(errors, "enum-reserved-values") < 2 {
-			t.Error("Expected at least 2 errors for reserved values")
+		if countRuleErrors(errors, "enum-reserved-values") != 1 {
+			t.Errorf("Expected exactly 1 error for reserved values, got %d", countRuleErrors(errors, "enum-reserved-values"))
+		}
+		// Verify the specific error message for INVALID
+		found := false
+		for _, err := range errors {
+			if err.Rule == "enum-reserved-values" && err.Message == "Enum value `Status.INVALID` uses a reserved name." {
+				found = true
+				break
+			}
+		}
+		if !found {
+			t.Error("Expected error message for INVALID enum value not found")
 		}
 	})
 
 	t.Run("should pass non-reserved enum values", func(t *testing.T) {
 		schema := `
 		enum Status {
+			UNKNOWN
 			ACTIVE
 			INACTIVE
 			PENDING
@@ -778,6 +791,304 @@ func TestMutationResponseNullable(t *testing.T) {
 		errors := runRule(t, rule, schema)
 		if countRuleErrors(errors, "mutation-response-nullable") > 0 {
 			t.Error("Expected no nullable errors for nullable response fields")
+		}
+	})
+}
+
+func TestFieldsNullableExceptId(t *testing.T) {
+	rule := NewFieldsNullableExceptId()
+
+	t.Run("should flag non-null fields except ID", func(t *testing.T) {
+		schema := `
+		type User {
+			id: ID!
+			name: String!
+			email: String!
+			age: Int!
+		}
+		
+		type Product {
+			productId: ID!
+			title: String!
+			price: Float!
+		}
+		`
+		errors := runRule(t, rule, schema)
+		// Should flag name, email, age, title, price (5 total) but not id or productId
+		if countRuleErrors(errors, "fields-nullable-except-id") != 5 {
+			t.Errorf("Expected exactly 5 errors for non-null non-ID fields, got %d", countRuleErrors(errors, "fields-nullable-except-id"))
+		}
+
+		// Verify specific error messages
+		expectedMessages := []string{
+			"Field `User.name` should be nullable (`String` instead of `String!`)",
+			"Field `User.email` should be nullable (`String` instead of `String!`)",
+			"Field `User.age` should be nullable (`Int` instead of `Int!`)",
+			"Field `Product.title` should be nullable (`String` instead of `String!`)",
+			"Field `Product.price` should be nullable (`Float` instead of `Float!`)",
+		}
+
+		for _, expectedMsg := range expectedMessages {
+			found := false
+			for _, err := range errors {
+				if err.Rule == "fields-nullable-except-id" && strings.Contains(err.Message, expectedMsg) {
+					found = true
+					break
+				}
+			}
+			if !found {
+				t.Errorf("Expected error message containing '%s' not found", expectedMsg)
+			}
+		}
+	})
+
+	t.Run("should pass nullable fields and ID fields", func(t *testing.T) {
+		schema := `
+		type User {
+			id: ID!
+			name: String
+			email: String
+			age: Int
+			profile: UserProfile
+		}
+		
+		type UserProfile {
+			profileId: ID!
+			bio: String
+			avatar: String
+		}
+		
+		type Query {
+			user: User
+			users: [User!]!
+		}
+		`
+		errors := runRule(t, rule, schema)
+		if countRuleErrors(errors, "fields-nullable-except-id") > 0 {
+			t.Errorf("Expected no errors for nullable fields and ID fields, got %d", countRuleErrors(errors, "fields-nullable-except-id"))
+		}
+	})
+
+	t.Run("should handle different ID field naming patterns", func(t *testing.T) {
+		schema := `
+		type User {
+			id: ID!
+			userId: ID!
+			userID: ID!
+			name: String!
+		}
+		
+		type Order {
+			orderId: ID!
+			customerId: ID!
+			amount: Float!
+		}
+		`
+		errors := runRule(t, rule, schema)
+		// Should only flag name and amount (2 errors), not the ID fields
+		if countRuleErrors(errors, "fields-nullable-except-id") != 2 {
+			t.Errorf("Expected exactly 2 errors for non-ID fields, got %d", countRuleErrors(errors, "fields-nullable-except-id"))
+		}
+
+		// Verify it flags the right fields
+		expectedFields := []string{"User.name", "Order.amount"}
+		for _, expectedField := range expectedFields {
+			found := false
+			for _, err := range errors {
+				if err.Rule == "fields-nullable-except-id" && strings.Contains(err.Message, expectedField) {
+					found = true
+					break
+				}
+			}
+			if !found {
+				t.Errorf("Expected error for field '%s' not found", expectedField)
+			}
+		}
+	})
+
+	t.Run("should handle list types correctly", func(t *testing.T) {
+		schema := `
+		type User {
+			id: ID!
+			tags: [String!]!
+			friends: [User!]!
+			optionalTags: [String!]
+		}
+		`
+		errors := runRule(t, rule, schema)
+		// Should flag the non-null list fields (tags, friends) but not optionalTags
+		if errors != nil || len(errors) > 0 {
+			t.Errorf("UnExpected errors got %v", errors)
+		}
+	})
+
+	t.Run("should skip root operation types", func(t *testing.T) {
+		schema := `
+		type Query {
+			user: User!
+			product: Product!
+		}
+		
+		type Mutation {
+			createUser: User!
+			deleteUser: Boolean!
+		}
+		
+		type Subscription {
+			userUpdated: User!
+		}
+		
+		type User {
+			id: ID!
+			name: String
+		}
+		
+		type Product {
+			id: ID!
+			title: String
+		}
+		`
+		errors := runRule(t, rule, schema)
+		// Should not flag Query, Mutation, or Subscription fields
+		if countRuleErrors(errors, "fields-nullable-except-id") > 0 {
+			t.Errorf("Expected no errors for root types and nullable fields, got %d", countRuleErrors(errors, "fields-nullable-except-id"))
+		}
+	})
+
+	t.Run("should handle non-ID fields with ID in name correctly", func(t *testing.T) {
+		schema := `
+		type User {
+			id: ID!
+			videoId: String!
+			ideaTitle: String!
+			identifier: Int!
+		}
+		`
+		errors := runRule(t, rule, schema)
+		// videoId ends with Id but is String type, so should be flagged
+		// ideaTitle contains "id" but doesn't end with it, should be flagged
+		// identifier contains "id" but doesn't end with Id/ID, should be flagged
+		if countRuleErrors(errors, "fields-nullable-except-id") != 3 {
+			t.Errorf("Expected exactly 3 errors for non-ID type fields, got %d", countRuleErrors(errors, "fields-nullable-except-id"))
+		}
+	})
+
+	t.Run("should handle custom scalar types", func(t *testing.T) {
+		schema := `
+		scalar DateTime
+		scalar UUID
+		
+		type User {
+			id: ID!
+			createdAt: DateTime!
+			uuid: UUID!
+			customField: String!
+		}
+		`
+		errors := runRule(t, rule, schema)
+		// Should flag all non-ID fields (createdAt, uuid, customField)
+		if countRuleErrors(errors, "fields-nullable-except-id") != 3 {
+			t.Errorf("Expected exactly 3 errors for non-ID scalar fields, got %d", countRuleErrors(errors, "fields-nullable-except-id"))
+		}
+	})
+}
+
+func TestRelayPageInfo(t *testing.T) {
+	rule := NewRelayPageInfo()
+
+	t.Run("should flag PageInfo missing required fields", func(t *testing.T) {
+		schema := `
+		type PageInfo {
+			hasNextPage: Boolean!
+			# Missing hasPreviousPage, startCursor, endCursor
+		}
+		`
+		errors := runRule(t, rule, schema)
+		if countRuleErrors(errors, "relay-pageinfo") != 3 {
+			t.Errorf("Expected exactly 3 errors for missing fields, got %d", countRuleErrors(errors, "relay-pageinfo"))
+		}
+		
+		expectedMissingFields := []string{"hasPreviousPage", "startCursor", "endCursor"}
+		for _, field := range expectedMissingFields {
+			found := false
+			for _, err := range errors {
+				if err.Rule == "relay-pageinfo" && strings.Contains(err.Message, fmt.Sprintf("must contain field `%s`", field)) {
+					found = true
+					break
+				}
+			}
+			if !found {
+				t.Errorf("Expected error for missing field '%s'", field)
+			}
+		}
+	})
+
+	t.Run("should flag PageInfo with incorrect field types", func(t *testing.T) {
+		schema := `
+		type PageInfo {
+			hasNextPage: String!
+			hasPreviousPage: Boolean
+			startCursor: Int
+			endCursor: Boolean!
+		}
+		`
+		errors := runRule(t, rule, schema)
+		if countRuleErrors(errors, "relay-pageinfo") != 4 {
+			t.Errorf("Expected exactly 4 errors for incorrect field types, got %d", countRuleErrors(errors, "relay-pageinfo"))
+		}
+		
+		// Check specific type errors
+		expectedTypeErrors := map[string]string{
+			"hasNextPage":     "Boolean!",
+			"hasPreviousPage": "Boolean!",
+			"startCursor":     "String",
+			"endCursor":       "String",
+		}
+		
+		for field, expectedType := range expectedTypeErrors {
+			found := false
+			for _, err := range errors {
+				if err.Rule == "relay-pageinfo" && 
+				   strings.Contains(err.Message, fmt.Sprintf("field `%s` must return %s", field, expectedType)) {
+					found = true
+					break
+				}
+			}
+			if !found {
+				t.Errorf("Expected type error for field '%s' (should be %s)", field, expectedType)
+			}
+		}
+	})
+
+	t.Run("should pass valid PageInfo", func(t *testing.T) {
+		schema := `
+		type PageInfo {
+			hasNextPage: Boolean!
+			hasPreviousPage: Boolean!
+			startCursor: String
+			endCursor: String
+		}
+		`
+		errors := runRule(t, rule, schema)
+		if countRuleErrors(errors, "relay-pageinfo") > 0 {
+			t.Errorf("Expected no errors for valid PageInfo, got %d", countRuleErrors(errors, "relay-pageinfo"))
+		}
+	})
+
+	t.Run("should allow additional fields on PageInfo", func(t *testing.T) {
+		schema := `
+		type PageInfo {
+			hasNextPage: Boolean!
+			hasPreviousPage: Boolean!
+			startCursor: String
+			endCursor: String
+			totalCount: Int
+			hasmore: Boolean
+		}
+		`
+		errors := runRule(t, rule, schema)
+		if countRuleErrors(errors, "relay-pageinfo") > 0 {
+			t.Errorf("Expected no errors for PageInfo with additional fields, got %d", countRuleErrors(errors, "relay-pageinfo"))
 		}
 	})
 }

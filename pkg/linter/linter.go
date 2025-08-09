@@ -50,6 +50,8 @@ func New() *Linter {
 			rules.NewListNonNullItems(),
 			rules.NewEnumReservedValues(),
 			rules.NewMutationResponseNullable(),
+			rules.NewFieldsNullableExceptId(),
+			rules.NewRelayPageInfo(),
 		},
 		enabledRules: make(map[string]bool),
 	}
