@@ -55,6 +55,7 @@ func New() *Linter {
 			rules.NewRelayPageInfo(),
 			rules.NewRelayEdgeTypes(),
 			//rules.NewRelayConnectionTypes(), Fix the linting rules and then enable it later
+			rules.NewUnsupportedDirectives(),
 		},
 		enabledRules: make(map[string]bool),
 	}
