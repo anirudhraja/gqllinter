@@ -781,3 +781,225 @@ func TestMutationResponseNullable(t *testing.T) {
 		}
 	})
 }
+
+func TestUnsupportedDirectives(t *testing.T) {
+	rule := NewUnsupportedDirectives()
+
+	t.Run("should flag unsupported directives on types", func(t *testing.T) {
+		schema := `
+		directive @inaccessible on OBJECT
+		directive @external on OBJECT
+		
+		type User @inaccessible {
+			id: ID!
+			name: String
+		}
+		
+		type Product @external {
+			id: ID!
+			price: Float
+		}
+		`
+		errors := runRule(t, rule, schema)
+		if countRuleErrors(errors, "unsupported-directives") < 2 {
+			t.Error("Expected at least 2 errors for unsupported directives on types")
+		}
+	})
+
+	t.Run("should flag unsupported directives on fields", func(t *testing.T) {
+		schema := `
+		directive @requires(fields: String!) on FIELD_DEFINITION
+		directive @provides(fields: String!) on FIELD_DEFINITION
+		
+		type User {
+			id: ID!
+			name: String @requires(fields: "id")
+			email: String @provides(fields: "verified")
+		}
+		`
+		errors := runRule(t, rule, schema)
+		if countRuleErrors(errors, "unsupported-directives") < 2 {
+			t.Error("Expected at least 2 errors for unsupported directives on fields")
+		}
+	})
+
+	t.Run("should flag unsupported directives on enum values", func(t *testing.T) {
+		schema := `
+		directive @external on ENUM_VALUE
+		directive @inaccessible on ENUM_VALUE
+		
+		enum Status {
+			ACTIVE @external
+			INACTIVE @inaccessible
+		}
+		`
+		errors := runRule(t, rule, schema)
+		if countRuleErrors(errors, "unsupported-directives") < 2 {
+			t.Error("Expected at least 2 errors for unsupported directives on enum values")
+		}
+	})
+
+	t.Run("should pass when no unsupported directives are used", func(t *testing.T) {
+		schema := `
+		type User {
+			id: ID!
+			name: String @deprecated(reason: "Use fullName instead")
+		}
+		
+		enum Status {
+			ACTIVE
+			INACTIVE
+		}
+		`
+		errors := runRule(t, rule, schema)
+		if countRuleErrors(errors, "unsupported-directives") > 0 {
+			t.Error("Expected no errors when no unsupported directives are used")
+		}
+	})
+
+	t.Run("should flag unsupported directives on interfaces", func(t *testing.T) {
+		schema := `
+		directive @inaccessible on INTERFACE | FIELD_DEFINITION
+		directive @external on FIELD_DEFINITION
+		directive @requires(fields: String!) on FIELD_DEFINITION
+		
+		interface Node @inaccessible {
+			id: ID! @external
+			createdAt: String @requires(fields: "id")
+		}
+		
+		type User implements Node {
+			id: ID!
+			createdAt: String!
+			name: String
+		}
+		`
+		errors := runRule(t, rule, schema)
+		if countRuleErrors(errors, "unsupported-directives") < 3 {
+			t.Error("Expected at least 3 errors for unsupported directives on interfaces")
+		}
+	})
+
+	t.Run("should flag unsupported directives on input objects", func(t *testing.T) {
+		schema := `
+		directive @inaccessible on INPUT_OBJECT | INPUT_FIELD_DEFINITION
+		directive @external on INPUT_FIELD_DEFINITION
+		directive @requires(fields: String!) on INPUT_FIELD_DEFINITION
+		directive @provides(fields: String!) on INPUT_FIELD_DEFINITION
+		
+		input UserInput @inaccessible {
+			name: String! @external
+			email: String! @requires(fields: "name")
+			metadata: String @provides(fields: "verified")
+		}
+		
+		type Mutation {
+			createUser(input: UserInput!): Boolean
+		}
+		`
+		errors := runRule(t, rule, schema)
+		if countRuleErrors(errors, "unsupported-directives") < 4 {
+			t.Error("Expected at least 4 errors for unsupported directives on input objects")
+		}
+	})
+
+	t.Run("should flag unsupported directives on field arguments", func(t *testing.T) {
+		schema := `
+		directive @inaccessible on ARGUMENT_DEFINITION
+		directive @external on ARGUMENT_DEFINITION
+		
+		type Query {
+			getUser(
+				id: ID! @inaccessible
+				filters: String @external
+			): String
+		}
+		`
+		errors := runRule(t, rule, schema)
+		if countRuleErrors(errors, "unsupported-directives") < 2 {
+			t.Error("Expected at least 2 errors for unsupported directives on field arguments")
+		}
+	})
+
+	t.Run("should flag multiple unsupported directives on same element", func(t *testing.T) {
+		schema := `
+		directive @inaccessible on FIELD_DEFINITION
+		directive @external on FIELD_DEFINITION
+		directive @requires(fields: String!) on FIELD_DEFINITION
+		
+		type User {
+			id: ID!
+			name: String @inaccessible @external @requires(fields: "id")
+		}
+		`
+		errors := runRule(t, rule, schema)
+		if countRuleErrors(errors, "unsupported-directives") < 3 {
+			t.Error("Expected at least 3 errors for multiple unsupported directives on same field")
+		}
+	})
+
+	t.Run("comprehensive test with all schema elements", func(t *testing.T) {
+		schema := `
+		directive @inaccessible on OBJECT | INTERFACE | INPUT_OBJECT | FIELD_DEFINITION | INPUT_FIELD_DEFINITION | ENUM_VALUE | ARGUMENT_DEFINITION
+		directive @external on FIELD_DEFINITION | INPUT_FIELD_DEFINITION | ENUM_VALUE
+		directive @requires(fields: String!) on FIELD_DEFINITION | INPUT_FIELD_DEFINITION | ARGUMENT_DEFINITION
+		directive @provides(fields: String!) on FIELD_DEFINITION | INPUT_FIELD_DEFINITION
+		
+		enum Status {
+			ACTIVE @inaccessible
+			INACTIVE @external
+		}
+		
+		interface Node @inaccessible {
+			id: ID! @external
+			createdAt: String @requires(fields: "id")
+		}
+		
+		type User implements Node @inaccessible {
+			id: ID! @external
+			createdAt: String! @requires(fields: "id")
+			name: String @provides(fields: "email")
+			status: Status
+		}
+		
+		input UserInput @inaccessible {
+			name: String! @external
+			email: String! @requires(fields: "name")
+			metadata: String @provides(fields: "verified")
+		}
+		
+		type Query {
+			getUser(
+				id: ID! @inaccessible
+				filters: String @requires(fields: "name")
+			): User
+			searchUsers(input: UserInput!): [User!]!
+		}
+		`
+		errors := runRule(t, rule, schema)
+		// Expected errors:
+		// 2 enum value errors + 3 interface errors + 4 object type errors + 4 input object errors + 2 argument errors = 15 total
+		if countRuleErrors(errors, "unsupported-directives") < 15 {
+			t.Error("Expected at least 15 errors for comprehensive test with all unsupported directives")
+		}
+	})
+
+	t.Run("should flag all four unsupported directives", func(t *testing.T) {
+		schema := `
+		directive @inaccessible on OBJECT
+		directive @external on FIELD_DEFINITION
+		directive @requires(fields: String!) on FIELD_DEFINITION
+		directive @provides(fields: String!) on FIELD_DEFINITION
+		
+		type User @inaccessible {
+			id: ID! @external
+			name: String @requires(fields: "id")
+			email: String @provides(fields: "verified")
+		}
+		`
+		errors := runRule(t, rule, schema)
+		if countRuleErrors(errors, "unsupported-directives") < 4 {
+			t.Error("Expected at least 4 errors for all unsupported directives")
+		}
+	})
+}
