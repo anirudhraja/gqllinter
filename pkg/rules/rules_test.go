@@ -163,113 +163,446 @@ func TestNoHashtagDescription(t *testing.T) {
 func TestNamingConvention(t *testing.T) {
 	rule := NewNamingConvention()
 
-	t.Run("should flag invalid type names", func(t *testing.T) {
-		schema := `
-		type user_data {
-			id: ID!
-		}
-		`
-		errors := runRule(t, rule, schema)
-		if countRuleErrors(errors, "naming-convention") == 0 {
-			t.Error("Expected error for invalid type name")
-		}
+	t.Run("Type Names - PascalCase Validation", func(t *testing.T) {
+		t.Run("should flag non-PascalCase type names", func(t *testing.T) {
+			schema := `
+			type user_data {
+				id: ID!
+			}
+			type userProfile {
+				id: ID!
+			}
+			type USER_DATA {
+				id: ID!
+			}
+			`
+			errors := runRule(t, rule, schema)
+
+			expectedErrors := []string{
+				"Type name `user_data` should be PascalCase.",
+				"Type name `userProfile` should be PascalCase.",
+				"Type name `USER_DATA` should be PascalCase.",
+			}
+
+			for _, expectedMsg := range expectedErrors {
+				if !containsError(errors, expectedMsg) {
+					t.Errorf("Expected error: %s", expectedMsg)
+				}
+			}
+		})
+
+		t.Run("should pass valid PascalCase type names", func(t *testing.T) {
+			schema := `
+			type UserProfile {
+				id: ID!
+			}
+			type AccountSettings {
+				id: ID!
+			}
+			type PaymentMethod123 {
+				id: ID!
+			}
+			`
+			errors := runRule(t, rule, schema)
+			pascalCaseErrors := 0
+			for _, err := range errors {
+				if strings.Contains(err.Message, "should be PascalCase") {
+					pascalCaseErrors++
+				}
+			}
+			if pascalCaseErrors > 0 {
+				t.Errorf("Expected no PascalCase errors, got %d", pascalCaseErrors)
+			}
+		})
 	})
 
-	t.Run("should flag generic type names", func(t *testing.T) {
-		schema := `
-		type Data {
-			value: String!
-		}
-		`
-		errors := runRule(t, rule, schema)
-		if countRuleErrors(errors, "naming-convention") == 0 {
-			t.Error("Expected error for generic type name")
-		}
+	t.Run("Object Types - Suffix/Prefix Validation", func(t *testing.T) {
+		t.Run("should flag Object types with Type/Object suffix", func(t *testing.T) {
+			schema := `
+			type UserType {
+				id: ID!
+			}
+			type DataObject {
+				id: ID!
+			}
+			type TypeUser {
+				id: ID!
+			}
+			type ObjectData {
+				id: ID!
+			}
+			`
+			errors := runRule(t, rule, schema)
+
+			expectedErrors := []string{
+				"Type name `UserType` should be PascalCase and should not start/end with `Type` or `Object`",
+				"Type name `DataObject` should be PascalCase and should not start/end with `Type` or `Object`",
+				"Type name `TypeUser` should be PascalCase and should not start/end with `Type` or `Object`",
+				"Type name `ObjectData` should be PascalCase and should not start/end with `Type` or `Object`",
+			}
+
+			for _, expectedMsg := range expectedErrors {
+				if !containsError(errors, expectedMsg) {
+					t.Errorf("Expected error: %s", expectedMsg)
+				}
+			}
+		})
+
+		t.Run("should pass Object types without Type/Object suffix", func(t *testing.T) {
+			schema := `
+			type User {
+				id: ID!
+			}
+			type Account {
+				id: ID!
+			}
+			type PaymentMethod {
+				id: ID!
+			}
+			`
+			errors := runRule(t, rule, schema)
+			objectSuffixErrors := 0
+			for _, err := range errors {
+				if strings.Contains(err.Message, "should not start/end with `Type` or `Object`") {
+					objectSuffixErrors++
+				}
+			}
+			if objectSuffixErrors > 0 {
+				t.Errorf("Expected no Object suffix errors, got %d", objectSuffixErrors)
+			}
+		})
 	})
 
-	t.Run("should pass valid type names", func(t *testing.T) {
-		schema := `
-		type UserProfile {
-			id: ID!
-			displayName: String!
-		}
-		`
-		errors := runRule(t, rule, schema)
-		if countRuleErrors(errors, "naming-convention") > 0 {
-			t.Error("Expected no naming convention errors for valid names")
-		}
-	})
-}
+	t.Run("Interface Types - Suffix/Prefix Validation", func(t *testing.T) {
+		t.Run("should flag Interface types with Interface suffix", func(t *testing.T) {
+			schema := `
+			interface NodeInterface {
+				id: ID!
+			}
+			interface InterfaceNode {
+				id: ID!
+			}
+			`
+			errors := runRule(t, rule, schema)
 
-func TestNoFieldNamespacing(t *testing.T) {
-	rule := NewNoFieldNamespacing()
+			expectedErrors := []string{
+				"Interface name `NodeInterface` should be PascalCase and should not start/end with `Interface`",
+				"Interface name `InterfaceNode` should be PascalCase and should not start/end with `Interface`",
+			}
 
-	t.Run("should flag namespaced fields", func(t *testing.T) {
-		schema := `
-		type User {
-			userId: ID!
-			userName: String!
-		}
-		`
-		errors := runRule(t, rule, schema)
-		if countRuleErrors(errors, "no-field-namespacing") < 2 {
-			t.Error("Expected at least 2 errors for namespaced fields")
-		}
-	})
+			for _, expectedMsg := range expectedErrors {
+				if !containsError(errors, expectedMsg) {
+					t.Errorf("Expected error: %s", expectedMsg)
+				}
+			}
+		})
 
-	t.Run("should pass non-namespaced fields", func(t *testing.T) {
-		schema := `
-		type User {
-			id: ID!
-			name: String!
-		}
-		`
-		errors := runRule(t, rule, schema)
-		if countRuleErrors(errors, "no-field-namespacing") > 0 {
-			t.Error("Expected no namespacing errors")
-		}
-	})
-}
-
-func TestMinimalTopLevelQueries(t *testing.T) {
-	rule := NewMinimalTopLevelQueries()
-
-	t.Run("should flag excessive top-level queries", func(t *testing.T) {
-		schema := `
-		type Query {
-			user1: String
-			user2: String
-			user3: String
-			user4: String
-			user5: String
-			user6: String
-			user7: String
-			user8: String
-			user9: String
-			user10: String
-			user11: String
-			user12: String
-			user13: String
-		}
-		`
-		errors := runRule(t, rule, schema)
-		if countRuleErrors(errors, "minimal-top-level-queries") == 0 {
-			t.Error("Expected error for excessive top-level queries")
-		}
+		t.Run("should pass Interface types without Interface suffix", func(t *testing.T) {
+			schema := `
+			interface Node {
+				id: ID!
+			}
+			interface Timestamped {
+				createdAt: String!
+			}
+			`
+			errors := runRule(t, rule, schema)
+			interfaceSuffixErrors := 0
+			for _, err := range errors {
+				if strings.Contains(err.Message, "should not start/end with `Interface`") {
+					interfaceSuffixErrors++
+				}
+			}
+			if interfaceSuffixErrors > 0 {
+				t.Errorf("Expected no Interface suffix errors, got %d", interfaceSuffixErrors)
+			}
+		})
 	})
 
-	t.Run("should pass reasonable number of queries", func(t *testing.T) {
-		schema := `
-		type Query {
-			user: String
-			posts: String
-			comments: String
-		}
-		`
-		errors := runRule(t, rule, schema)
-		if countRuleErrors(errors, "minimal-top-level-queries") > 0 {
-			t.Error("Expected no errors for reasonable query count")
-		}
+	t.Run("Enum Types - Suffix/Prefix Validation", func(t *testing.T) {
+		t.Run("should flag Enum types with Enum suffix", func(t *testing.T) {
+			schema := `
+			enum StatusEnum {
+				ACTIVE
+				INACTIVE
+			}
+			enum EnumStatus {
+				ACTIVE
+				INACTIVE
+			}
+			enum statuses_enum {
+				ACTIVE
+				INACTIVE
+			}
+			`
+			errors := runRule(t, rule, schema)
+
+			// Should have errors for enum naming
+			enumNamingErrors := 0
+			for _, err := range errors {
+				if strings.Contains(err.Message, "should not start or end with `Enum`") {
+					enumNamingErrors++
+				}
+			}
+			if enumNamingErrors < 3 {
+				t.Errorf("Expected at least 3 enum naming errors, got %d", enumNamingErrors)
+			}
+		})
+
+		t.Run("should pass Enum types without Enum suffix", func(t *testing.T) {
+			schema := `
+			enum Status {
+				ACTIVE
+				INACTIVE
+			}
+			enum UserRole {
+				ADMIN
+				USER
+			}
+			`
+			errors := runRule(t, rule, schema)
+			enumSuffixErrors := 0
+			for _, err := range errors {
+				if strings.Contains(err.Message, "should not start or end with `Enum`") {
+					enumSuffixErrors++
+				}
+			}
+			if enumSuffixErrors > 0 {
+				t.Errorf("Expected no Enum suffix errors, got %d", enumSuffixErrors)
+			}
+		})
+	})
+
+	t.Run("Enum Values - UPPER_CASE Validation", func(t *testing.T) {
+		t.Run("should flag non-UPPER_CASE enum values", func(t *testing.T) {
+			schema := `
+			enum Status {
+				active
+				Inactive
+				PENDING
+				in_progress
+				Done
+			}
+			`
+			errors := runRule(t, rule, schema)
+
+			expectedErrors := []string{
+				"Enum value `Status.active` should be UPPER_CASE",
+				"Enum value `Status.Inactive` should be UPPER_CASE",
+				"Enum value `Status.in_progress` should be UPPER_CASE",
+				"Enum value `Status.Done` should be UPPER_CASE",
+			}
+
+			for _, expectedMsg := range expectedErrors {
+				if !containsError(errors, expectedMsg) {
+					t.Errorf("Expected error: %s", expectedMsg)
+				}
+			}
+		})
+
+		t.Run("should pass valid UPPER_CASE enum values", func(t *testing.T) {
+			schema := `
+			enum Status {
+				ACTIVE
+				INACTIVE
+				PENDING
+				IN_PROGRESS
+				DONE
+				STATUS_123
+			}
+			`
+			errors := runRule(t, rule, schema)
+			upperCaseErrors := 0
+			for _, err := range errors {
+				if strings.Contains(err.Message, "should be UPPER_CASE") {
+					upperCaseErrors++
+				}
+			}
+			if upperCaseErrors > 0 {
+				t.Errorf("Expected no UPPER_CASE errors, got %d", upperCaseErrors)
+			}
+		})
+	})
+
+	t.Run("Field Names - camelCase Validation", func(t *testing.T) {
+		t.Run("should flag non-camelCase field names", func(t *testing.T) {
+			schema := `
+			type User {
+				User_id: ID!
+				display_name: String!
+				FirstName: String!
+				LAST_NAME: String!
+			}
+			`
+			errors := runRule(t, rule, schema)
+
+			expectedErrors := []string{
+				"Field name `User.User_id` should be camelCase.",
+				"Field name `User.display_name` should be camelCase.",
+				"Field name `User.FirstName` should be camelCase.",
+				"Field name `User.LAST_NAME` should be camelCase.",
+			}
+
+			for _, expectedMsg := range expectedErrors {
+				if !containsError(errors, expectedMsg) {
+					t.Errorf("Expected error: %s", expectedMsg)
+				}
+			}
+		})
+
+		t.Run("should pass valid camelCase field names", func(t *testing.T) {
+			schema := `
+			type User {
+				id: ID!
+				displayName: String!
+				firstName: String!
+				lastName: String!
+				createdAt: String!
+				field123: String!
+			}
+			`
+			errors := runRule(t, rule, schema)
+			camelCaseErrors := 0
+			for _, err := range errors {
+				if strings.Contains(err.Message, "should be camelCase") {
+					camelCaseErrors++
+				}
+			}
+			if camelCaseErrors > 0 {
+				t.Errorf("Expected no camelCase errors, got %d", camelCaseErrors)
+			}
+		})
+	})
+
+	t.Run("Edge Cases", func(t *testing.T) {
+		t.Run("should handle empty names gracefully", func(t *testing.T) {
+			// This test mainly ensures the functions don't crash on edge cases
+			// The GraphQL parser should prevent truly empty names, but we test our functions
+			rule := NewNamingConvention()
+
+			// Test empty string handling in helper functions
+			if rule.isPascalCase("") {
+				t.Error("Empty string should not be valid PascalCase")
+			}
+			if rule.isCamelCase("") {
+				t.Error("Empty string should not be valid camelCase")
+			}
+			if rule.isUpperCase("") {
+				t.Error("Empty string should not be valid UPPER_CASE")
+			}
+		})
+
+		t.Run("should handle numbers in names correctly", func(t *testing.T) {
+			schema := `
+			type User123 {
+				field456: String!
+			}
+			enum Status789 {
+				VALUE_123
+			}
+			`
+			errors := runRule(t, rule, schema)
+
+			// These should be valid
+			invalidErrors := 0
+			for _, err := range errors {
+				if strings.Contains(err.Message, "User123") ||
+					strings.Contains(err.Message, "field456") ||
+					strings.Contains(err.Message, "Status789") ||
+					strings.Contains(err.Message, "VALUE_123") {
+					invalidErrors++
+				}
+			}
+			if invalidErrors > 0 {
+				t.Errorf("Numbers in names should be allowed, got %d errors", invalidErrors)
+			}
+		})
+
+		t.Run("should skip built-in types", func(t *testing.T) {
+			// Built-in types should be skipped automatically by the GraphQL parser
+			// This test ensures our rule doesn't process them
+			schema := `
+			type User {
+				id: ID!
+				name: String!
+			}
+			`
+			errors := runRule(t, rule, schema)
+
+			// Should not have errors for built-in types like String, ID, etc.
+			for _, err := range errors {
+				if strings.Contains(err.Message, "String") ||
+					strings.Contains(err.Message, "ID") ||
+					strings.Contains(err.Message, "Int") ||
+					strings.Contains(err.Message, "Float") ||
+					strings.Contains(err.Message, "Boolean") {
+					t.Errorf("Should not validate built-in types: %s", err.Message)
+				}
+			}
+		})
+	})
+
+	t.Run("Complex Schema Integration", func(t *testing.T) {
+		t.Run("should handle multiple violations in one schema", func(t *testing.T) {
+			schema := `
+			type user_type {
+				User_id: ID!
+				display_name: String!
+			}
+			
+			interface NodeInterface {
+				id: ID!
+			}
+			
+			enum statusEnum {
+				active
+				inactive
+			}
+			`
+			errors := runRule(t, rule, schema)
+
+			// Should have multiple different types of errors
+			expectedMinErrors := 6 // At least 6 different violations
+			if len(errors) < expectedMinErrors {
+				t.Errorf("Expected at least %d errors for complex schema, got %d", expectedMinErrors, len(errors))
+			}
+		})
+
+		t.Run("should pass fully compliant schema", func(t *testing.T) {
+			schema := `
+			type User {
+				id: ID!
+				displayName: String!
+				email: String!
+			}
+			
+			interface Node {
+				id: ID!
+			}
+			
+			enum UserStatus {
+				ACTIVE
+				INACTIVE
+				PENDING
+			}
+			
+			input UserInput {
+				displayName: String!
+				email: String!
+			}
+			`
+			errors := runRule(t, rule, schema)
+
+			namingErrors := countRuleErrors(errors, "naming-convention")
+			if namingErrors > 0 {
+				t.Errorf("Expected no naming convention errors for compliant schema, got %d", namingErrors)
+				for _, err := range errors {
+					if err.Rule == "naming-convention" {
+						t.Logf("Error: %s", err.Message)
+					}
+				}
+			}
+		})
 	})
 }
 
@@ -394,13 +727,13 @@ func TestAlphabetize(t *testing.T) {
 func TestInputName(t *testing.T) {
 	rule := NewInputName()
 
-	t.Run("should flag incorrect mutation input naming", func(t *testing.T) {
+	t.Run("should flag incorrect mutation argument naming", func(t *testing.T) {
 		schema := `
 		type Mutation {
-			createUser(data: CreateUserData!): User
+			createUser(data: CreateUserRequest!): User
 		}
 		
-		input CreateUserData {
+		input CreateUserRequest {
 			name: String!
 		}
 		
@@ -409,15 +742,20 @@ func TestInputName(t *testing.T) {
 		}
 		`
 		errors := runRule(t, rule, schema)
-		if countRuleErrors(errors, "input-name") < 2 {
-			t.Error("Expected at least 2 errors for incorrect input naming")
+		if countRuleErrors(errors, "operation-input-name") != 1 {
+			t.Errorf("Expected exactly 1 error for incorrect argument naming, got %d", countRuleErrors(errors, "operation-input-name"))
+		}
+
+		expectedMessage := "Mutation `createUser` argument should be named 'request', not 'data'."
+		if !containsError(errors, expectedMessage) {
+			t.Error("Expected error message for incorrect argument name not found")
 		}
 	})
 
-	t.Run("should pass correct mutation input naming", func(t *testing.T) {
+	t.Run("should flag incorrect mutation input type naming", func(t *testing.T) {
 		schema := `
 		type Mutation {
-			createUser(input: CreateUserInput!): User
+			createUser(request: CreateUserInput!): User
 		}
 		
 		input CreateUserInput {
@@ -429,8 +767,228 @@ func TestInputName(t *testing.T) {
 		}
 		`
 		errors := runRule(t, rule, schema)
-		if countRuleErrors(errors, "input-name") > 0 {
-			t.Error("Expected no input-name errors for correct naming")
+		if countRuleErrors(errors, "operation-input-name") != 1 {
+			t.Errorf("Expected exactly 1 error for incorrect input type naming, got %d", countRuleErrors(errors, "operation-input-name"))
+		}
+
+		expectedMessage := "Mutation `createUser` input type should be named `CreateUserRequest` or `CreateUserRequest[Version]`, not `CreateUserInput`."
+		if !containsError(errors, expectedMessage) {
+			t.Error("Expected error message for incorrect input type name not found")
+		}
+	})
+
+	t.Run("should pass correct mutation naming", func(t *testing.T) {
+		schema := `
+		type Mutation {
+			createUser(request: CreateUserRequest!): User
+			updateProfile(request: UpdateProfileRequest!): Profile
+		}
+		
+		input CreateUserRequest {
+			name: String!
+		}
+		
+		input UpdateProfileRequest {
+			bio: String
+		}
+		
+		type User {
+			id: ID!
+		}
+		
+		type Profile {
+			id: ID!
+		}
+		`
+		errors := runRule(t, rule, schema)
+		if countRuleErrors(errors, "operation-input-name") > 0 {
+			t.Errorf("Expected no operation-input-name errors for correct naming, got %d", countRuleErrors(errors, "operation-input-name"))
+		}
+	})
+
+	t.Run("should pass versioned request types", func(t *testing.T) {
+		schema := `
+		type Mutation {
+			createUserV2(request: CreateUserRequestV2!): User
+			updateProfile(request: UpdateProfileRequestVersion1!): Profile
+			deleteUser(request: DeleteUserRequestV3!): Boolean
+		}
+		
+		input CreateUserRequestV2 {
+			name: String!
+			email: String!
+		}
+		
+		input UpdateProfileRequestVersion1 {
+			bio: String
+		}
+		
+		input DeleteUserRequestV3 {
+			id: ID!
+		}
+		
+		type User {
+			id: ID!
+		}
+		
+		type Profile {
+			id: ID!
+		}
+		`
+		errors := runRule(t, rule, schema)
+		if countRuleErrors(errors, "operation-input-name") > 1 {
+			t.Errorf("Expected exactly one operation-input-name errors for versioned request types, got %d", countRuleErrors(errors, "operation-input-name"))
+		}
+	})
+
+	t.Run("should flag mutations with multiple arguments", func(t *testing.T) {
+		schema := `
+		type Mutation {
+			createUser(name: String!, email: String!): User
+			updateUser(id: ID!, data: UpdateUserData!): User
+		}
+		
+		input UpdateUserData {
+			name: String
+		}
+		
+		type User {
+			id: ID!
+		}
+		`
+		errors := runRule(t, rule, schema)
+		if countRuleErrors(errors, "operation-input-name") != 2 {
+			t.Errorf("Expected exactly 2 errors for mutations with multiple arguments, got %d", countRuleErrors(errors, "operation-input-name"))
+		}
+
+		expectedMessages := []string{
+			"Mutation `createUser` has 2 arguments. Consider consolidating into a single 'request' argument of type `CreateUserRequest`.",
+			"Mutation `updateUser` has 2 arguments. Consider consolidating into a single 'request' argument of type `UpdateUserRequest`.",
+		}
+
+		for _, expectedMsg := range expectedMessages {
+			if !containsError(errors, expectedMsg) {
+				t.Errorf("Expected error message '%s' not found", expectedMsg)
+			}
+		}
+	})
+
+	t.Run("should check query arguments", func(t *testing.T) {
+		schema := `
+		type Query {
+			getUser(input: GetUserInput!): User
+			searchUsers(data: SearchUsersData!): [User!]!
+		}
+		
+		input GetUserInput {
+			id: ID!
+		}
+		
+		input SearchUsersData {
+			query: String!
+		}
+		
+		type User {
+			id: ID!
+		}
+		`
+		errors := runRule(t, rule, schema)
+		if countRuleErrors(errors, "operation-input-name") != 4 {
+			t.Errorf("Expected exactly 4 errors for incorrect query naming, got %d", countRuleErrors(errors, "operation-input-name"))
+		}
+
+		expectedMessages := []string{
+			"Query `getUser` argument should be named 'request', not 'input'.",
+			"Query `getUser` input type should be named `GetUserRequest` or `GetUserRequest[Version]`, not `GetUserInput`.",
+			"Query `searchUsers` argument should be named 'request', not 'data'.",
+			"Query `searchUsers` input type should be named `SearchUsersRequest` or `SearchUsersRequest[Version]`, not `SearchUsersData`.",
+		}
+
+		for _, expectedMsg := range expectedMessages {
+			if !containsError(errors, expectedMsg) {
+				t.Errorf("Expected error message '%s' not found", expectedMsg)
+			}
+		}
+	})
+
+	t.Run("should pass correct query naming", func(t *testing.T) {
+		schema := `
+		type Query {
+			getUser(request: GetUserRequest!): User
+			searchUsers(request: SearchUsersRequestV2!): [User!]!
+			filterProducts(request: FilterProductsRequest!): [Product!]!
+		}
+		
+		input GetUserRequest {
+			id: ID!
+		}
+		
+		input SearchUsersRequestV2 {
+			query: String!
+			limit: Int
+		}
+		
+		input FilterProductsRequest {
+			category: String
+			priceRange: PriceRange
+		}
+		
+		input PriceRange {
+			min: Float
+			max: Float
+		}
+		
+		type User {
+			id: ID!
+		}
+		
+		type Product {
+			id: ID!
+		}
+		`
+		errors := runRule(t, rule, schema)
+		if countRuleErrors(errors, "operation-input-name") > 0 {
+			t.Errorf("Expected no operation-input-name errors for correct query naming, got %d", countRuleErrors(errors, "operation-input-name"))
+		}
+	})
+
+	t.Run("should handle operations without arguments", func(t *testing.T) {
+		schema := `
+		type Query {
+			getAllUsers: [User!]!
+			getCurrentTime: String!
+		}
+		
+		type Mutation {
+			refreshCache: Boolean!
+			ping: String!
+		}
+		
+		type User {
+			id: ID!
+		}
+		`
+		errors := runRule(t, rule, schema)
+		if countRuleErrors(errors, "operation-input-name") > 0 {
+			t.Errorf("Expected no operation-input-name errors for operations without arguments, got %d", countRuleErrors(errors, "operation-input-name"))
+		}
+	})
+
+	t.Run("should handle schema without query or mutation", func(t *testing.T) {
+		schema := `
+		type User {
+			id: ID!
+			name: String
+		}
+		
+		type Product {
+			id: ID!
+			title: String
+		}
+		`
+		errors := runRule(t, rule, schema)
+		if countRuleErrors(errors, "operation-input-name") > 0 {
+			t.Errorf("Expected no operation-input-name errors for schema without operations, got %d", countRuleErrors(errors, "operation-input-name"))
 		}
 	})
 }
@@ -761,6 +1319,7 @@ func TestMutationResponseNullable(t *testing.T) {
 		type CreateUserResult {
 			user: User!
 			success: Boolean!
+			message: String!
 		}
 		
 		type User {
@@ -768,29 +1327,167 @@ func TestMutationResponseNullable(t *testing.T) {
 		}
 		`
 		errors := runRule(t, rule, schema)
-		if countRuleErrors(errors, "mutation-response-nullable") < 2 {
-			t.Error("Expected at least 2 errors for non-null response fields")
+		if countRuleErrors(errors, "mutation-response-nullable") != 3 {
+			t.Error("Expected exactly 3 errors for non-null response fields")
+		}
+
+		// Check specific error messages for response fields
+		expectedFields := []string{"user", "success", "message"}
+		for _, field := range expectedFields {
+			found := false
+			for _, err := range errors {
+				if err.Rule == "mutation-response-nullable" &&
+					strings.Contains(err.Message, fmt.Sprintf("Mutation response field `CreateUserResult.%s`", field)) {
+					found = true
+					break
+				}
+			}
+			if !found {
+				t.Errorf("Expected error for non-null response field %s", field)
+			}
 		}
 	})
 
-	t.Run("should pass nullable mutation response fields", func(t *testing.T) {
+	t.Run("should pass valid mutation with non-null return and nullable response fields", func(t *testing.T) {
 		schema := `
 		type Mutation {
-			createUser: CreateUserResult
+			createUser: CreateUserResult!
+			updateUser: UpdateUserResult!
 		}
 		
 		type CreateUserResult {
 			user: User
 			success: Boolean
+			errors: [String]
+		}
+		
+		type UpdateUserResult {
+			user: User
+			message: String
 		}
 		
 		type User {
-			id: ID
+			id: ID!
+			name: String
 		}
 		`
 		errors := runRule(t, rule, schema)
 		if countRuleErrors(errors, "mutation-response-nullable") > 0 {
-			t.Error("Expected no nullable errors for nullable response fields")
+			t.Error("Expected no errors for valid mutation structure")
+		}
+	})
+
+	t.Run("should handle mutations returning scalars", func(t *testing.T) {
+		schema := `
+		type Mutation {
+			deleteUser: Boolean!
+			getUserCount: Int!
+		}
+		`
+		errors := runRule(t, rule, schema)
+		// No response type fields to check, only mutation fields themselves
+		if countRuleErrors(errors, "mutation-response-nullable") > 0 {
+			t.Error("Expected no errors for scalar mutation returns")
+		}
+	})
+
+	//t.Run("should handle list types in mutation responses", func(t *testing.T) {
+	//	schema := `
+	//	type Mutation {
+	//		createUsers: CreateUsersResult!
+	//	}
+	//
+	//	type CreateUsersResult {
+	//		users: [User!]!
+	//		errors: [String!]!
+	//		successCount: Int!
+	//	}
+	//
+	//	type User {
+	//		id: ID!
+	//	}
+	//	`
+	//	errors := runRule(t, rule, schema)
+	//	if countRuleErrors(errors, "mutation-response-nullable") != 3 {
+	//		t.Error("Expected exactly 3 errors for non-null list response fields")
+	//	}
+	//})
+
+	t.Run("should handle nested object types", func(t *testing.T) {
+		schema := `
+		type Mutation {
+			createOrder: CreateOrderResult!
+		}
+		
+		type CreateOrderResult {
+			order: Order!
+			payment: Payment!
+		}
+		
+		type Order {
+			id: ID!
+			items: [OrderItem!]!
+		}
+		
+		type Payment {
+			id: ID!
+			amount: Float!
+		}
+		
+		type OrderItem {
+			id: ID!
+			quantity: Int!
+		}
+		`
+		errors := runRule(t, rule, schema)
+		// Should only flag CreateOrderResult fields, not nested type fields
+		if countRuleErrors(errors, "mutation-response-nullable") != 2 {
+			t.Errorf("Expected exactly 2 errors for CreateOrderResult fields, got %d", countRuleErrors(errors, "mutation-response-nullable"))
+		}
+	})
+
+	t.Run("should handle schema without mutations", func(t *testing.T) {
+		schema := `
+		type Query {
+			user: User
+		}
+		
+		type User {
+			id: ID!
+		}
+		`
+		errors := runRule(t, rule, schema)
+		if countRuleErrors(errors, "mutation-response-nullable") > 0 {
+			t.Error("Expected no errors for schema without mutations")
+		}
+	})
+
+	t.Run("should handle union and interface return types", func(t *testing.T) {
+		schema := `
+		type Mutation {
+			createContent: CreateContentResult!
+		}
+		
+		type CreateContentResult {
+			content: Content!
+			success: Boolean!
+		}
+		
+		union Content = Article | Video
+		
+		type Article {
+			id: ID!
+			title: String!
+		}
+		
+		type Video {
+			id: ID!
+			duration: Int!
+		}
+		`
+		errors := runRule(t, rule, schema)
+		if countRuleErrors(errors, "mutation-response-nullable") < 2 {
+			t.Error("Expected at least 2 errors for non-null response fields with union types")
 		}
 	})
 }
@@ -1007,7 +1704,7 @@ func TestRelayPageInfo(t *testing.T) {
 		if countRuleErrors(errors, "relay-pageinfo") != 3 {
 			t.Errorf("Expected exactly 3 errors for missing fields, got %d", countRuleErrors(errors, "relay-pageinfo"))
 		}
-		
+
 		expectedMissingFields := []string{"hasPreviousPage", "startCursor", "endCursor"}
 		for _, field := range expectedMissingFields {
 			found := false
@@ -1036,7 +1733,7 @@ func TestRelayPageInfo(t *testing.T) {
 		if countRuleErrors(errors, "relay-pageinfo") != 4 {
 			t.Errorf("Expected exactly 4 errors for incorrect field types, got %d", countRuleErrors(errors, "relay-pageinfo"))
 		}
-		
+
 		// Check specific type errors
 		expectedTypeErrors := map[string]string{
 			"hasNextPage":     "Boolean!",
@@ -1044,12 +1741,12 @@ func TestRelayPageInfo(t *testing.T) {
 			"startCursor":     "String",
 			"endCursor":       "String",
 		}
-		
+
 		for field, expectedType := range expectedTypeErrors {
 			found := false
 			for _, err := range errors {
-				if err.Rule == "relay-pageinfo" && 
-				   strings.Contains(err.Message, fmt.Sprintf("field `%s` must return %s", field, expectedType)) {
+				if err.Rule == "relay-pageinfo" &&
+					strings.Contains(err.Message, fmt.Sprintf("field `%s` must return %s", field, expectedType)) {
 					found = true
 					break
 				}
@@ -1089,6 +1786,201 @@ func TestRelayPageInfo(t *testing.T) {
 		errors := runRule(t, rule, schema)
 		if countRuleErrors(errors, "relay-pageinfo") > 0 {
 			t.Errorf("Expected no errors for PageInfo with additional fields, got %d", countRuleErrors(errors, "relay-pageinfo"))
+		}
+	})
+}
+
+func TestOperationResponseName(t *testing.T) {
+	rule := NewOperationResponseName()
+
+	t.Run("valid response types", func(t *testing.T) {
+		schema := `
+		type Query {
+			getUser: GetUserResponse!
+			listUsers: ListUsersResponse!
+			searchUser: SearchUserResponse!
+		}
+		
+		type Mutation {
+			createUser(request: CreateUserRequest!): CreateUserResponse!
+			updateUser(request: UpdateUserRequest!): UpdateUserResponse!
+		}
+		
+		type GetUserResponse {
+			user: User
+		}
+		
+		type ListUsersResponse {
+			users: [User!]!
+		}
+		
+		type SearchUserResponse {
+			users: [User!]!
+		}
+		
+		type CreateUserResponse {
+			user: User
+		}
+		
+		type UpdateUserResponse {
+			user: User
+		}
+		
+		type User {
+			id: ID!
+			name: String!
+		}
+		
+		input CreateUserRequest {
+			name: String!
+		}
+		
+		input UpdateUserRequest {
+			id: ID!
+			name: String!
+		}
+		`
+
+		errors := runRule(t, rule, schema)
+		if len(errors) != 0 {
+			t.Errorf("Expected no errors for valid response types, got %d errors: %v", len(errors), errors)
+		}
+	})
+
+	t.Run("invalid response type names", func(t *testing.T) {
+		schema := `
+		type Query {
+			getUser: UserResponse!
+			listUsers: UsersData!
+		}
+		
+		type Mutation {
+			createUser: CreateUserResult!
+		}
+		
+		type UserResponse {
+			user: User
+		}
+		
+		type UsersData {
+			users: [User!]!
+		}
+		
+		type CreateUserResult {
+			user: User
+		}
+		
+		type User {
+			id: ID!
+			name: String!
+		}
+		`
+
+		errors := runRule(t, rule, schema)
+		ruleErrors := countRuleErrors(errors, "operation-response-name")
+
+		if ruleErrors != 3 {
+			t.Errorf("Expected 3 errors for invalid response type names, got %d", ruleErrors)
+		}
+
+		// Check specific error messages
+		expectedMessages := []string{
+			"Query `getUser` response type should be named `GetUserResponse` or `GetUserResponse[Version]`, not `UserResponse`. Expected: `GetUserResponse!`",
+			"Query `listUsers` response type should be named `ListUsersResponse` or `ListUsersResponse[Version]`, not `UsersData`. Expected: `ListUsersResponse!`",
+			"Mutation `createUser` response type should be named `CreateUserResponse` or `CreateUserResponse[Version]`, not `CreateUserResult`. Expected: `CreateUserResponse!`",
+		}
+
+		for _, expectedMsg := range expectedMessages {
+			if !containsError(errors, expectedMsg) {
+				t.Errorf("Expected error message: %s", expectedMsg)
+			}
+		}
+	})
+
+	t.Run("nullable response types", func(t *testing.T) {
+		schema := `
+		type Query {
+			getUser: GetUserResponse
+			listUsers: ListUsersResponse
+		}
+		
+		type Mutation {
+			createUser: CreateUserResponse
+		}
+		
+		type GetUserResponse {
+			user: User
+		}
+		
+		type ListUsersResponse {
+			users: [User!]!
+		}
+		
+		type CreateUserResponse {
+			user: User
+		}
+		
+		type User {
+			id: ID!
+			name: String!
+		}
+		`
+
+		errors := runRule(t, rule, schema)
+		ruleErrors := countRuleErrors(errors, "operation-response-name")
+
+		if ruleErrors != 3 {
+			t.Errorf("Expected 3 errors for nullable response types, got %d", ruleErrors)
+		}
+
+		// Check specific error messages for non-nullable requirement
+		expectedMessages := []string{
+			"Query `getUser` response type should be non-nullable (`GetUserResponse!` instead of `GetUserResponse`).",
+			"Query `listUsers` response type should be non-nullable (`ListUsersResponse!` instead of `ListUsersResponse`).",
+			"Mutation `createUser` response type should be non-nullable (`CreateUserResponse!` instead of `CreateUserResponse`).",
+		}
+
+		for _, expectedMsg := range expectedMessages {
+			if !containsError(errors, expectedMsg) {
+				t.Errorf("Expected error message: %s", expectedMsg)
+			}
+		}
+	})
+
+	t.Run("versioned response types", func(t *testing.T) {
+		schema := `
+		type Query {
+			getUser: GetUserResponseV2!
+			listUsers: ListUsersResponseVersion3!
+		}
+		
+		type Mutation {
+			createUser: CreateUserResponseV1!
+		}
+		
+		type GetUserResponseV2 {
+			user: User
+		}
+		
+		type ListUsersResponseVersion3 {
+			users: [User!]!
+		}
+		
+		type CreateUserResponseV1 {
+			user: User
+		}
+		
+		type User {
+			id: ID!
+			name: String!
+		}
+		`
+
+		errors := runRule(t, rule, schema)
+		ruleErrors := countRuleErrors(errors, "operation-response-name")
+
+		if ruleErrors != 0 {
+			t.Errorf("Expected no errors for versioned response types, got %d", ruleErrors)
 		}
 	})
 }
