@@ -78,29 +78,3 @@ func (r *EnumReservedValues) isReservedValue(value string, reserved []string) bo
 
 	return false
 }
-
-// suggestAlternative suggests a better alternative for reserved enum values
-func (r *EnumReservedValues) suggestAlternative(reservedValue, enumName string) string {
-	reservedUpper := strings.ToUpper(reservedValue)
-
-	// Suggest context-specific alternatives
-	alternatives := map[string]string{
-		"UNKNOWN":     "OTHER",
-		"UNSPECIFIED": "NOT_SET",
-		"INVALID":     "INVALID_VALUE",
-		"NULL":        "EMPTY_VALUE",
-		"UNDEFINED":   "NOT_DEFINED",
-		"DEFAULT":     "STANDARD",
-		"NONE":        "NO_VALUE",
-		"EMPTY":       "EMPTY_STATE",
-		"ANY":         "ALL_TYPES",
-		"ALL":         "EVERY",
-	}
-
-	if alternative, exists := alternatives[reservedUpper]; exists {
-		return alternative
-	}
-
-	// Fallback: suggest adding enum name as prefix
-	return enumName + "_" + reservedValue
-}
