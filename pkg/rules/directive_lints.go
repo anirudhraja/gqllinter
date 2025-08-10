@@ -8,10 +8,10 @@ import (
 	"github.com/vektah/gqlparser/v2/ast"
 )
 
-// UnsupportedDirectives checks that no unsupported directives are used
+// DirectivesCommonLint checks common directive lint issues
 type DirectivesCommonLint struct{}
 
-// NewDirectivesCommonLint creates a new instance of the UnsupportedDirectives rule
+// NewDirectivesCommonLint creates a new instance of the DirectivesCommonLint rule
 func NewDirectivesCommonLint() *DirectivesCommonLint {
 	return &DirectivesCommonLint{}
 }
