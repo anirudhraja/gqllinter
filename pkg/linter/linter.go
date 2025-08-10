@@ -51,6 +51,8 @@ func New() *Linter {
 			rules.NewEnumReservedValues(),
 			rules.NewMutationResponseNullable(),
 			rules.NewUnsupportedDirectives(),
+			rules.NewDirectivesCommonLint(),
+			rules.NewNoSameFileExtend(),
 		},
 		enabledRules: make(map[string]bool),
 	}
