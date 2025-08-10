@@ -40,7 +40,7 @@ func (r *RelayPageInfo) Check(schema *ast.Schema, source *ast.Source) []types.Li
 
 			// Check if this is a PageInfo type
 			if def.Name == "PageInfo" {
-				errors = append(errors, r.validatePageInfoType(def, source)...)
+				errors = append(errors, r.ValidatePageInfoType(def, source)...)
 			}
 		}
 	}
@@ -48,8 +48,8 @@ func (r *RelayPageInfo) Check(schema *ast.Schema, source *ast.Source) []types.Li
 	return errors
 }
 
-// validatePageInfoType validates that a PageInfo type meets Relay specifications
-func (r *RelayPageInfo) validatePageInfoType(pageInfoType *ast.Definition, source *ast.Source) []types.LintError {
+// ValidatePageInfoType validates that a PageInfo type meets Relay specifications
+func (r *RelayPageInfo) ValidatePageInfoType(pageInfoType *ast.Definition, source *ast.Source) []types.LintError {
 	var errors []types.LintError
 
 	// Required fields according to Relay spec

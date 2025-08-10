@@ -53,6 +53,8 @@ func New() *Linter {
 			rules.NewOperationResponseName(),
 			rules.NewFieldsNullableExceptId(),
 			rules.NewRelayPageInfo(),
+			rules.NewRelayEdgeTypes(),
+			rules.NewRelayConnectionTypes(),
 		},
 		enabledRules: make(map[string]bool),
 	}
