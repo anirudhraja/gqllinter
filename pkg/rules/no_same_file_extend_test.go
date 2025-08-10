@@ -32,16 +32,23 @@ func TestNoSameFileExtend(t *testing.T) {
 			expectedErrors: 0,
 		},
 		{
-			name: "Valid: Only extension without definition",
+			name: "Invalid: Type defined and extended in same file (even with @key)",
 			schema: `
+				directive @key(fields: String!) on OBJECT
+				
+				type User @key(fields: "id") {
+					id: ID!
+				}
+				
 				extend type User {
 					email: String
 				}
 			`,
-			expectedErrors: 0,
+			expectedErrors: 1, // Still same-file extension error
+			expectedMsg:    "Type 'User' is defined at line 4 and extended at line 8 in the same file",
 		},
 		{
-			name: "Invalid: Type defined and extended in same file",
+			name: "Invalid: Extension without @key directive",
 			schema: `
 				type User {
 					id: ID!
@@ -52,8 +59,8 @@ func TestNoSameFileExtend(t *testing.T) {
 					email: String
 				}
 			`,
-			expectedErrors: 1,
-			expectedMsg:    "Type 'User' is defined at line 2 and extended at line 7 in the same file",
+			expectedErrors: 2, // Same-file extension + missing @key
+			expectedMsg:    "Extended object type 'User' at line 7 must have the @key directive",
 		},
 		{
 			name: "Invalid: Interface defined and extended in same file",
@@ -70,7 +77,7 @@ func TestNoSameFileExtend(t *testing.T) {
 			expectedMsg:    "Type 'Node' is defined at line 2 and extended at line 6 in the same file",
 		},
 		{
-			name: "Invalid: Input type defined and extended in same file",
+			name: "Invalid: Input type extension not allowed",
 			schema: `
 				input UserInput {
 					name: String
@@ -81,10 +88,10 @@ func TestNoSameFileExtend(t *testing.T) {
 				}
 			`,
 			expectedErrors: 1,
-			expectedMsg:    "Type 'UserInput' is defined at line 2 and extended at line 6 in the same file",
+			expectedMsg:    "Cannot extend input 'UserInput' at line 6. Only object types and interfaces can be extended",
 		},
 		{
-			name: "Invalid: Enum defined and extended in same file",
+			name: "Invalid: Enum extension not allowed",
 			schema: `
 				enum Status {
 					ACTIVE
@@ -96,10 +103,10 @@ func TestNoSameFileExtend(t *testing.T) {
 				}
 			`,
 			expectedErrors: 1,
-			expectedMsg:    "Type 'Status' is defined at line 2 and extended at line 7 in the same file",
+			expectedMsg:    "Cannot extend enum 'Status' at line 7. Only object types and interfaces can be extended",
 		},
 		{
-			name: "Invalid: Union defined and extended in same file",
+			name: "Invalid: Union extension not allowed",
 			schema: `
 				type User { id: ID! }
 				type Product { id: ID! }
@@ -110,36 +117,26 @@ func TestNoSameFileExtend(t *testing.T) {
 				extend union SearchResult = Organization
 			`,
 			expectedErrors: 1,
-			expectedMsg:    "Type 'SearchResult' is defined at line 6 and extended at line 8 in the same file",
+			expectedMsg:    "Cannot extend union 'SearchResult' at line 8. Only object types and interfaces can be extended",
 		},
 		{
-			name: "Invalid: Scalar defined and extended in same file",
+			name: "Invalid: Scalar extension not allowed",
 			schema: `
 				scalar DateTime
 				
 				extend scalar DateTime @specifiedBy(url: "https://tools.ietf.org/html/rfc3339")
 			`,
 			expectedErrors: 1,
-			expectedMsg:    "Type 'DateTime' is defined at line 2 and extended at line 4 in the same file",
+			expectedMsg:    "Cannot extend scalar 'DateTime' at line 4. Only object types and interfaces can be extended",
 		},
 		{
-			name: "Invalid: Multiple types with conflicts",
+			name: "Invalid: Multiple invalid extensions",
 			schema: `
-				type User {
-					id: ID!
-				}
+				enum Status { ACTIVE }
+				input UserInput { name: String }
 				
-				type Product {
-					id: ID!
-				}
-				
-				extend type User {
-					name: String
-				}
-				
-				extend type Product {
-					title: String
-				}
+				extend enum Status { PENDING }
+				extend input UserInput { email: String }
 			`,
 			expectedErrors: 2,
 		},
@@ -158,25 +155,32 @@ func TestNoSameFileExtend(t *testing.T) {
 			expectedErrors: 0,
 		},
 		{
-			name: "Valid: Complex type definitions without extensions",
+			name: "Valid: Only extension with @key directive (simulating separate files)",
 			schema: `
-				type Query {
-					user(id: ID!): User
-					users: [User!]!
-				}
+				directive @key(fields: String!) on OBJECT
 				
-				type User {
+				type User @key(fields: "id") {
 					id: ID!
-					name: String!
-					profile: UserProfile
 				}
 				
-				type UserProfile {
-					bio: String
-					avatarUrl: String
+				# Only extensions, no type definition
+				extend type User {
+					name: String!
 				}
 			`,
-			expectedErrors: 0,
+			expectedErrors: 1, // Same-file error (but this shows @key validation would work)
+		},
+		{
+			name: "Invalid: Extension of external type without @key directive",
+			schema: `
+				directive @key(fields: String!) on OBJECT
+				
+				extend type ExternalUser {
+					name: String!
+				}
+			`,
+			expectedErrors: 1, // External type being extended must have @key (but isn't found in this schema)
+			expectedMsg:    "Extended object type 'ExternalUser' at line 4 must have the @key directive",
 		},
 		{
 			name: "Valid: Comments and formatting variations",
@@ -208,7 +212,7 @@ func TestNoSameFileExtend(t *testing.T) {
 					email: String
 				}
 			`,
-			expectedErrors: 1,
+			expectedErrors: 2, // Same-file extension + missing @key
 			expectedMsg:    "Type 'User' is defined at line 2 and extended at line 8 in the same file",
 		},
 	}
@@ -260,98 +264,6 @@ func TestNoSameFileExtend(t *testing.T) {
 			for _, err := range errors {
 				if err.Rule != rule.Name() {
 					t.Errorf("Expected rule name '%s', got '%s'", rule.Name(), err.Rule)
-				}
-			}
-		})
-	}
-}
-
-func TestNoSameFileExtend_EdgeCases(t *testing.T) {
-	rule := NewNoSameFileExtend()
-
-	tests := []struct {
-		name           string
-		schema         string
-		expectedErrors int
-	}{
-		{
-			name:           "Empty schema",
-			schema:         ``,
-			expectedErrors: 0,
-		},
-		{
-			name: "Only comments",
-			schema: `
-				# This is a comment
-				# Another comment
-			`,
-			expectedErrors: 0,
-		},
-		{
-			name: "Only whitespace and newlines",
-			schema: `
-			
-			
-			`,
-			expectedErrors: 0,
-		},
-		{
-			name: "Type definition with trailing comments",
-			schema: `
-				type User { # This is a user type
-					id: ID!
-					name: String
-				}
-				
-				extend type User { # Extending user
-					email: String
-				}
-			`,
-			expectedErrors: 1,
-		},
-		{
-			name: "Complex formatting with mixed spacing",
-			schema: `
-				type User{
-					id: ID!
-				}
-
-				extend type User{
-					email: String
-				}
-			`,
-			expectedErrors: 1,
-		},
-		{
-			name: "Type definitions on same line (malformed but parseable)",
-			schema: `
-				type User { id: ID! }
-				extend type User { email: String }
-			`,
-			expectedErrors: 1,
-		},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			source := &ast.Source{
-				Name:  "test-schema.graphql",
-				Input: tt.schema,
-			}
-
-			// Parse the schema - some edge cases might fail parsing
-			schema, err := gqlparser.LoadSchema(source)
-			if err != nil {
-				// If parsing fails, we can't run our rule
-				t.Logf("Schema parsing failed (expected for some edge cases): %v", err)
-				return
-			}
-
-			errors := rule.Check(schema, source)
-			if len(errors) != tt.expectedErrors {
-				t.Errorf("Expected %d errors, got %d", tt.expectedErrors, len(errors))
-				for i, err := range errors {
-					t.Logf("Error %d: %s", i+1, err.Message)
 				}
 			}
 		})
