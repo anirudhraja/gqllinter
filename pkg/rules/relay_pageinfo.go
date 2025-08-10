@@ -60,7 +60,7 @@ func (r *RelayPageInfo) validatePageInfoType(pageInfoType *ast.Definition, sourc
 			description:  "indicates whether more edges exist following the current page",
 		},
 		"hasPreviousPage": {
-			name:         "hasPreviousPage", 
+			name:         "hasPreviousPage",
 			expectedType: "Boolean!",
 			description:  "indicates whether more edges exist prior to the current page",
 		},
@@ -71,7 +71,7 @@ func (r *RelayPageInfo) validatePageInfoType(pageInfoType *ast.Definition, sourc
 		},
 		"endCursor": {
 			name:         "endCursor",
-			expectedType: "String", 
+			expectedType: "String",
 			description:  "cursor corresponding to the last edge in the current page (nullable if no results)",
 		},
 	}
@@ -87,7 +87,7 @@ func (r *RelayPageInfo) validatePageInfoType(pageInfoType *ast.Definition, sourc
 			}
 
 			errors = append(errors, types.LintError{
-				Message: fmt.Sprintf("PageInfo must contain field `%s` that returns %s (%s).", 
+				Message: fmt.Sprintf("PageInfo must contain field `%s` that returns %s (%s).",
 					required.name, required.expectedType, required.description),
 				Location: types.Location{
 					Line:   line,
@@ -109,7 +109,7 @@ func (r *RelayPageInfo) validatePageInfoType(pageInfoType *ast.Definition, sourc
 			}
 
 			errors = append(errors, types.LintError{
-				Message: fmt.Sprintf("PageInfo field `%s` must return %s, but returns %s.", 
+				Message: fmt.Sprintf("PageInfo field `%s` must return %s, but returns %s.",
 					required.name, required.expectedType, actualType),
 				Location: types.Location{
 					Line:   line,
@@ -151,14 +151,14 @@ func (r *RelayPageInfo) typeToString(fieldType *ast.Type) string {
 			return r.typeToString(fieldType.Elem) + "!"
 		}
 	}
-	
+
 	if fieldType.NamedType != "" {
 		return fieldType.NamedType
 	}
-	
+
 	if fieldType.Elem != nil {
 		return "[" + r.typeToString(fieldType.Elem) + "]"
 	}
-	
+
 	return "Unknown"
-} 
+}

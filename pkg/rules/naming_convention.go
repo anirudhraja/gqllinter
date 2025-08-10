@@ -94,8 +94,8 @@ func (r *NamingConvention) Check(schema *ast.Schema, source *ast.Source) []types
 				column = def.Position.Column
 			}
 
-			if strings.HasSuffix(strings.ToLower(def.Name), "enum") || 
-			strings.HasPrefix(strings.ToLower(def.Name), "enum") {
+			if strings.HasSuffix(strings.ToLower(def.Name), "enum") ||
+				strings.HasPrefix(strings.ToLower(def.Name), "enum") {
 				errors = append(errors, types.LintError{
 					Message: fmt.Sprintf("Enum name `%s` should not start or end with `Enum`", def.Name),
 					Location: types.Location{
@@ -202,6 +202,6 @@ func (r *NamingConvention) isUpperCase(s string) bool {
 	// Must contain at least one letter and all letters must be uppercase
 	upperRegex := regexp.MustCompile(`^[A-Z0-9_]+$`)
 	hasLetter := regexp.MustCompile(`[A-Z]`)
-	
+
 	return upperRegex.MatchString(s) && hasLetter.MatchString(s)
 }
