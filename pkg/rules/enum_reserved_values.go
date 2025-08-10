@@ -31,10 +31,7 @@ func (r *EnumReservedValues) Check(schema *ast.Schema, source *ast.Source) []typ
 	var errors []types.LintError
 
 	// Reserved enum values for future compatibility
-	reservedValues := []string{
-		"UNKNOWN", "UNSPECIFIED", "INVALID", "NULL", "UNDEFINED",
-		"DEFAULT", "NONE", "EMPTY", "ANY", "ALL",
-	}
+	reservedValues := []string{"INVALID"}
 
 	// Check enum types
 	for _, def := range schema.Types {
@@ -52,10 +49,8 @@ func (r *EnumReservedValues) Check(schema *ast.Schema, source *ast.Source) []typ
 						column = enumValue.Position.Column
 					}
 
-					suggestion := r.suggestAlternative(enumValue.Name, def.Name)
-
 					errors = append(errors, types.LintError{
-						Message: fmt.Sprintf("Enum value `%s.%s` uses a reserved name. Consider `%s` instead to avoid conflicts and maintain extensibility.", def.Name, enumValue.Name, suggestion),
+						Message: fmt.Sprintf("Enum value `%s.%s` uses a reserved name.", def.Name, enumValue.Name),
 						Location: types.Location{
 							Line:   line,
 							Column: column,
@@ -82,30 +77,4 @@ func (r *EnumReservedValues) isReservedValue(value string, reserved []string) bo
 	}
 
 	return false
-}
-
-// suggestAlternative suggests a better alternative for reserved enum values
-func (r *EnumReservedValues) suggestAlternative(reservedValue, enumName string) string {
-	reservedUpper := strings.ToUpper(reservedValue)
-
-	// Suggest context-specific alternatives
-	alternatives := map[string]string{
-		"UNKNOWN":     "OTHER",
-		"UNSPECIFIED": "NOT_SET",
-		"INVALID":     "INVALID_VALUE",
-		"NULL":        "EMPTY_VALUE",
-		"UNDEFINED":   "NOT_DEFINED",
-		"DEFAULT":     "STANDARD",
-		"NONE":        "NO_VALUE",
-		"EMPTY":       "EMPTY_STATE",
-		"ANY":         "ALL_TYPES",
-		"ALL":         "EVERY",
-	}
-
-	if alternative, exists := alternatives[reservedUpper]; exists {
-		return alternative
-	}
-
-	// Fallback: suggest adding enum name as prefix
-	return enumName + "_" + reservedValue
 }
