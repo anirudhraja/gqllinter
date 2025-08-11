@@ -55,7 +55,7 @@ func TestNoInvalidEnum(t *testing.T) {
 				}
 			`,
 			expectedErrors: 1,
-			expectedMsg:    "Enum value 'INVALID' is not allowed as it conflicts with proto translation zero values",
+			expectedMsg:    "Enum value 'INVALID' is not allowed. Use a different name for enum 'Status'",
 		},
 		{
 			name: "Invalid: Enum with invalid value (lowercase)",
@@ -67,7 +67,7 @@ func TestNoInvalidEnum(t *testing.T) {
 				}
 			`,
 			expectedErrors: 1,
-			expectedMsg:    "Enum value 'INVALID' is not allowed as it conflicts with proto translation zero values",
+			expectedMsg:    "Enum value 'INVALID' is not allowed. Use a different name for enum 'Status'",
 		},
 		{
 			name: "Invalid: Enum with Invalid value (mixed case)",
@@ -79,7 +79,7 @@ func TestNoInvalidEnum(t *testing.T) {
 				}
 			`,
 			expectedErrors: 1,
-			expectedMsg:    "Enum value 'INVALID' is not allowed as it conflicts with proto translation zero values",
+			expectedMsg:    "Enum value 'INVALID' is not allowed. Use a different name for enum 'Status'",
 		},
 		{
 			name: "Invalid: Multiple enums with INVALID values",
@@ -176,4 +176,3 @@ func TestNoInvalidEnum(t *testing.T) {
 		})
 	}
 }
-

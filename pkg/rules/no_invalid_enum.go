@@ -46,7 +46,7 @@ func (r *NoInvalidEnum) checkEnumValues(enumDef *ast.Definition, source *ast.Sou
 	for _, enumValue := range enumDef.EnumValues {
 		if strings.ToUpper(enumValue.Name) == "INVALID" {
 			errors = append(errors, types.LintError{
-				Message: "Enum value 'INVALID' is not allowed as it conflicts with proto translation zero values. Use a different name for enum '" + enumDef.Name + "'",
+				Message: "Enum value 'INVALID' is not allowed. Use a different name for enum '" + enumDef.Name + "'",
 				Location: types.Location{
 					Line:   enumValue.Position.Line,
 					Column: enumValue.Position.Column,
