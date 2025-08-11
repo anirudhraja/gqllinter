@@ -86,32 +86,6 @@ func TestDirectivesCommonLint(t *testing.T) {
 		}
 	})
 
-	t.Run("should flag @shareable on fields", func(t *testing.T) {
-		schema := `
-		directive @shareable on FIELD_DEFINITION | INPUT_FIELD_DEFINITION
-		
-		type User {
-			id: ID!
-			name: String @shareable
-			email: String!
-		}
-		
-		input UserInput {
-			name: String @shareable
-			email: String!
-		}
-		
-		interface Node {
-			id: ID! @shareable
-		}
-		`
-		errors := runDirectiveLintRule(t, rule, schema)
-		expectedErrors := 3 // User.name, UserInput.name, Node.id should trigger errors
-		if countRuleErrors(errors, "common-directives-lint") != expectedErrors {
-			t.Errorf("Expected exactly %d errors for @shareable on fields, got %d", expectedErrors, countRuleErrors(errors, "common-directives-lint"))
-		}
-	})
-
 	t.Run("should pass when @shareable is only on object types", func(t *testing.T) {
 		schema := `
 		directive @shareable on OBJECT

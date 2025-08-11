@@ -43,7 +43,7 @@ func (r *DirectivesCommonLint) checkKeyShareableConflicts(schema *ast.Schema, so
 	// Check directives on schema types
 	for _, def := range schema.Types {
 		// Skip built-in types and introspection types
-		if def.BuiltIn || strings.HasPrefix(def.Name, "__") {
+		if def.BuiltIn || strings.HasPrefix(def.Name, "__") || def.Kind != ast.Object {
 			continue
 		}
 
@@ -77,34 +77,6 @@ func (r *DirectivesCommonLint) checkKeyShareableConflicts(schema *ast.Schema, so
 				},
 				Rule: r.Name(),
 			})
-		}
-		// Check @shareable on fields (for all types that have fields)
-		for _, field := range def.Fields {
-			// Skip built-in fields and introspection fields
-			if strings.HasPrefix(field.Name, "__") {
-				continue
-			}
-
-			for _, directive := range field.Directives {
-				if directive.Name == "shareable" {
-					line, column := 1, 1
-					if field.Position != nil {
-						line = field.Position.Line
-						column = field.Position.Column
-					}
-
-					errors = append(errors, types.LintError{
-						Message: fmt.Sprintf("The @shareable directive cannot be applied to field %s.%s. @shareable is only allowed on object types, not on fields.",
-							def.Name, field.Name),
-						Location: types.Location{
-							Line:   line,
-							Column: column,
-							File:   source.Name,
-						},
-						Rule: r.Name(),
-					})
-				}
-			}
 		}
 	}
 
