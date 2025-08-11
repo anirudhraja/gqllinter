@@ -246,11 +246,10 @@ func (r *KeyDirectivesLint) isBuiltInScalar(typeName string) bool {
 func (r *KeyDirectivesLint) hasCommaSeparatedFields(fieldsString string) bool {
 	// Remove quotes if present
 	trimmed := strings.Trim(fieldsString, `"`)
-	
 	// Check for commas that are not inside nested braces/brackets
 	braceLevel := 0
 	bracketLevel := 0
-	
+
 	for _, char := range trimmed {
 		switch char {
 		case '{':
@@ -268,6 +267,6 @@ func (r *KeyDirectivesLint) hasCommaSeparatedFields(fieldsString string) bool {
 			}
 		}
 	}
-	
+
 	return false
 }
