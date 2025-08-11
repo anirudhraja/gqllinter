@@ -128,12 +128,13 @@ func (r *RelayConnectionTypes) validateConnectionType(connectionType *ast.Defini
 			},
 			Rule: r.Name(),
 		})
-	} else {
-		// Additionally validate that the PageInfo type itself follows Relay specification
-		// TODO
-		//pageInfoErrors := NewRelayPageInfo().ValidatePageInfoType(pageInfoField, source)
-		//errors = append(errors, pageInfoErrors...)
 	}
+	//else {
+	//	// Additionally validate that the PageInfo type itself follows Relay specification
+	//	// TODO
+	//	//pageInfoErrors := NewRelayPageInfo().ValidatePageInfoType(pageInfoField, source)
+	//	//errors = append(errors, pageInfoErrors...)
+	//}
 
 	return errors
 }
