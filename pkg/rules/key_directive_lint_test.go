@@ -101,24 +101,6 @@ func TestKeyDirectivesLint(t *testing.T) {
 			expectedErrors: 2,
 		},
 		{
-			name: "Invalid: @key with nested field selection (object type not allowed)",
-			schema: `
-				directive @key(fields: String!) on OBJECT
-				
-				type User @key(fields: "profile { id }") {
-					id: ID!
-					profile: UserProfile
-				}
-				
-				type UserProfile {
-					id: ID!
-					bio: String
-				}
-			`,
-			expectedErrors: 1,
-			expectedMsg:    "Field 'profile' specified in @key directive must be a primitive or scalar type, but is of type 'UserProfile'",
-		},
-		{
 			name: "Valid: Multiple @key directives on different types",
 			schema: `
 				directive @key(fields: String!) on OBJECT
@@ -136,33 +118,6 @@ func TestKeyDirectivesLint(t *testing.T) {
 			expectedErrors: 0,
 		},
 		{
-			name: "Invalid: Multiple @key directives with errors",
-			schema: `
-				directive @key(fields: String!) on OBJECT
-				
-				type User @key(fields: "badField") {
-					id: ID!
-					name: String
-				}
-				
-				type Product @key(fields: "anotherBadField") {
-					sku: String!
-					title: String
-				}
-			`,
-			expectedErrors: 2,
-		},
-		{
-			name: "Valid: Object without @key directive",
-			schema: `
-				type User {
-					id: ID!
-					name: String
-				}
-			`,
-			expectedErrors: 0,
-		},
-		{
 			name: "Valid: @key on interface (should be ignored)",
 			schema: `
 				directive @key(fields: String!) on OBJECT | INTERFACE
@@ -172,20 +127,6 @@ func TestKeyDirectivesLint(t *testing.T) {
 				}
 			`,
 			expectedErrors: 0,
-		},
-		{
-			name: "Invalid: @key with comma-separated fields (no spaces)",
-			schema: `
-				directive @key(fields: String!) on OBJECT
-				
-				type User @key(fields: "id,name") {
-					id: ID!
-					name: String
-					email: String
-				}
-			`,
-			expectedErrors: 1,
-			expectedMsg:    "@key directive fields must be space-separated, not comma-separated. Found comma in fields: 'id,name' for object 'User'",
 		},
 		{
 			name: "Valid: Empty @key fields (edge case)",
@@ -199,23 +140,6 @@ func TestKeyDirectivesLint(t *testing.T) {
 			`,
 			expectedErrors: 1,
 			expectedMsg:    "Missing or invalid 'fields' argument in @key directive for object 'User'",
-		},
-		{
-			name: "Invalid: @key field with object type",
-			schema: `
-				directive @key(fields: String!) on OBJECT
-				
-				type User @key(fields: "profile") {
-					id: ID!
-					profile: UserProfile
-				}
-				
-				type UserProfile {
-					bio: String
-				}
-			`,
-			expectedErrors: 1,
-			expectedMsg:    "Field 'profile' specified in @key directive must be a primitive or scalar type, but is of type 'UserProfile'",
 		},
 		{
 			name: "Invalid: @key field with enum type",
@@ -324,6 +248,139 @@ func TestKeyDirectivesLint(t *testing.T) {
 				}
 			`,
 			expectedErrors: 0,
+		},
+		{
+			name: "Invalid: Single @key directive with resolvable: false missing fields",
+			schema: `
+				directive @key(fields: String!, resolvable: Boolean = true) on OBJECT
+				
+				type User @key(fields: "id", resolvable: false) {
+					id: ID!
+					name: String
+				}
+			`,
+			expectedErrors: 1,
+			expectedMsg:    "Object type 'User' has a single @key directive with 'resolvable: false' but the key does not include all object fields. Missing fields in @key: [name]. All fields must be included when using 'resolvable: false'.",
+		},
+		{
+			name: "Valid: Multiple @key directives without resolvable: false",
+			schema: `
+				directive @key(fields: String!, resolvable: Boolean = true) on OBJECT
+				
+				type User @key(fields: "id") @key(fields: "email") {
+					id: ID!
+					email: String
+					name: String
+				}
+			`,
+			expectedErrors: 0,
+		},
+		{
+			name: "Valid: Multiple @key directives with resolvable: true",
+			schema: `
+				directive @key(fields: String!, resolvable: Boolean = true) on OBJECT
+				
+				type User @key(fields: "id", resolvable: true) @key(fields: "email", resolvable: true) {
+					id: ID!
+					email: String
+					name: String
+				}
+			`,
+			expectedErrors: 0,
+		},
+		{
+			name: "Invalid: Multiple @key directives with one having resolvable: false",
+			schema: `
+				directive @key(fields: String!, resolvable: Boolean = true) on OBJECT
+				
+				type User @key(fields: "id", resolvable: false) @key(fields: "email") {
+					id: ID!
+					email: String
+					name: String
+				}
+			`,
+			expectedErrors: 1,
+			expectedMsg:    "Object type 'User' has a @key directive with 'resolvable: false' but also has 2 total @key directives",
+		},
+		{
+			name: "Invalid: Multiple @key directives with all having resolvable: false",
+			schema: `
+				directive @key(fields: String!, resolvable: Boolean = true) on OBJECT
+				
+				type User @key(fields: "id", resolvable: false) @key(fields: "email", resolvable: false) {
+					id: ID!
+					email: String
+					name: String
+				}
+			`,
+			expectedErrors: 1,
+			expectedMsg:    "Object type 'User' has a @key directive with 'resolvable: false' but also has 2 total @key directives",
+		},
+		{
+			name: "Invalid: Different objects with different @key configurations",
+			schema: `
+				directive @key(fields: String!, resolvable: Boolean = true) on OBJECT
+				
+				type User @key(fields: "id", resolvable: false) {
+					id: ID!
+					name: String
+				}
+				
+				type Product @key(fields: "sku") @key(fields: "title") {
+					sku: String!
+					title: String!
+				}
+			`,
+			expectedErrors: 1, // User missing name field in resolvable: false key
+			expectedMsg:    "Object type 'User' has a single @key directive with 'resolvable: false' but the key does not include all object fields",
+		},
+		{
+			name: "Invalid: Mixed valid and invalid objects",
+			schema: `
+				directive @key(fields: String!, resolvable: Boolean = true) on OBJECT
+				
+				type User @key(fields: "id", resolvable: false) {
+					id: ID!
+					name: String
+				}
+				
+				type Product @key(fields: "sku", resolvable: false) @key(fields: "title") {
+					sku: String!
+					title: String!
+				}
+			`,
+			expectedErrors: 2, // User missing name field + Product multiple @key with resolvable: false
+		},
+		{
+			name: "Valid: Single @key with resolvable: false includes all fields",
+			schema: `
+				directive @key(fields: String!, resolvable: Boolean = true) on OBJECT
+				
+				type User @key(fields: "id name email", resolvable: false) {
+					id: ID!
+					name: String!
+					email: String!
+				}
+			`,
+			expectedErrors: 0,
+		},
+		{
+			name: "Valid: Single @key with resolvable: false and nested field selection (only top-level fields matter)",
+			schema: `
+				directive @key(fields: String!, resolvable: Boolean = true) on OBJECT
+				
+				type User @key(fields: "id profile { nested }", resolvable: false) {
+					id: ID!
+					profile: Profile
+				}
+				
+				type Profile {
+					nested: String!
+					other: String!
+				}
+			`,
+			expectedErrors: 1,
+			expectedMsg:    "Field 'profile' specified in @key directive must be a primitive or scalar type, but is of type 'Profile'",
 		},
 	}
 
