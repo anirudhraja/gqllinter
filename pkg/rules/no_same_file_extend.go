@@ -285,15 +285,15 @@ func (r *NoSameFileExtend) checkExtendedTypesHaveKeyDirective(schema *ast.Schema
 	var errors []types.LintError
 
 	for typeName, extendInfo := range extendedTypes {
-		// Only check object types (not interfaces)
-		if extendInfo.TypeKind != "type" {
+		// Only check object types and interfaces
+		if !(strings.ToLower(extendInfo.TypeKind) == "type" || strings.ToLower(extendInfo.TypeKind) == "interface") {
 			continue
 		}
 
 		// Find the type in the schema to check for @key directive
 		var targetType *ast.Definition
 		for _, def := range schema.Types {
-			if def.Name == typeName && def.Kind == ast.Object {
+			if def.Name == typeName && (def.Kind == ast.Object || def.Kind == ast.Interface) {
 				targetType = def
 				break
 			}
@@ -315,9 +315,13 @@ func (r *NoSameFileExtend) checkExtendedTypesHaveKeyDirective(schema *ast.Schema
 
 		// If no @key directive found, report error
 		if !hasKeyDirective {
+			typeKind := "object"
+			if targetType.Kind == ast.Interface {
+				typeKind = "interface"
+			}
 			errors = append(errors, types.LintError{
-				Message: fmt.Sprintf("Extended object type '%s' at line %d must have the @key directive to be extendable in a federated schema.",
-					typeName, extendInfo.Line),
+				Message: fmt.Sprintf("Extended %s type '%s' at line %d must have the @key directive.",
+					typeKind, typeName, extendInfo.Line),
 				Location: types.Location{
 					Line:   extendInfo.Line,
 					Column: extendInfo.Column,

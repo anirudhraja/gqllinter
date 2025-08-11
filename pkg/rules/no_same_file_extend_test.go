@@ -50,31 +50,22 @@ func TestNoSameFileExtend(t *testing.T) {
 		{
 			name: "Invalid: Extension without @key directive",
 			schema: `
-				type User {
-					id: ID!
-					name: String
-				}
-				
 				extend type User {
 					email: String
 				}
 			`,
-			expectedErrors: 2, // Same-file extension + missing @key
-			expectedMsg:    "Extended object type 'User' at line 7 must have the @key directive",
+			expectedErrors: 1, // missing @key
+			expectedMsg:    "Extended object type 'User' at line 2 must have the @key directive.",
 		},
 		{
 			name: "Invalid: Interface defined and extended in same file",
 			schema: `
-				interface Node {
-					id: ID!
-				}
-				
 				extend interface Node {
 					createdAt: String
 				}
 			`,
-			expectedErrors: 1,
-			expectedMsg:    "Type 'Node' is defined at line 2 and extended at line 6 in the same file",
+			expectedErrors: 1, // missing @key
+			expectedMsg:    "Extended interface type 'Node' at line 2 must have the @key directive.",
 		},
 		{
 			name: "Invalid: Input type extension not allowed",
@@ -214,6 +205,57 @@ func TestNoSameFileExtend(t *testing.T) {
 			`,
 			expectedErrors: 2, // Same-file extension + missing @key
 			expectedMsg:    "Type 'User' is defined at line 2 and extended at line 8 in the same file",
+		},
+		{
+			name: "Invalid: Multiple extensions without @key directives",
+			schema: `
+				extend type UserWithoutKey {
+					name: String
+				}
+				
+				extend interface NodeWithoutKey {
+					description: String
+				}
+				
+				extend type ProductWithoutKey {
+					title: String
+				}
+			`,
+			expectedErrors: 3,
+		},
+		{
+			name: "Valid: Both extended object and interface with @key directive",
+			schema: `
+				directive @key(fields: String!) on OBJECT | INTERFACE
+
+				extend type UserWithKey @key(fields: "id") {
+					id: ID!
+					name: String
+				}
+				
+				extend interface NodeWithKey @key(fields: "id") {
+					id: ID!
+					description: String
+				}
+			`,
+			expectedErrors: 0,
+		},
+		{
+			name: "Valid: External interface extension with @key directive",
+			schema: `
+				directive @key(fields: String!) on OBJECT | INTERFACE
+				
+				interface ExternalNode @key(fields: "id") {
+					id: ID!
+				}
+				
+				# Simulating extension from different file by not defining here
+				extend interface AnotherExternalNode {
+					description: String
+				}
+			`,
+			expectedErrors: 1, // Missing @key for AnotherExternalNode
+			expectedMsg:    "Extended interface type 'AnotherExternalNode' at line 9 must have the @key directive",
 		},
 	}
 
