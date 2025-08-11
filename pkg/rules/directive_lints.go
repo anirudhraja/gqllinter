@@ -28,10 +28,8 @@ func (r *DirectivesCommonLint) Description() string {
 
 // Check validates common directive rules
 func (r *DirectivesCommonLint) Check(schema *ast.Schema, source *ast.Source) []types.LintError {
-	var errors []types.LintError
-
 	// Check for @key and @shareable conflicts on objects
-	errors = r.checkKeyShareableConflicts(schema, source)
+	errors := r.checkKeyShareableConflicts(schema, source)
 
 	return errors
 }
