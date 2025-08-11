@@ -31,16 +31,16 @@ func (r *KeyDirectivesLint) Description() string {
 // Check validates @key directive rules
 func (r *KeyDirectivesLint) Check(schema *ast.Schema, source *ast.Source) []types.LintError {
 	var errors []types.LintError
-	
+
 	// Check all object types for @key directive validation
 	errors = append(errors, r.validateKeyDirectiveFields(schema, source)...)
-	
+
 	// Check resolvable: false @key directive constraints
 	errors = append(errors, r.validateResolvableFalseConstraints(schema, source)...)
-	
+
 	// Check that resolvable: false keys include all fields
 	errors = append(errors, r.validateResolvableFalseIncludesAllFields(schema, source)...)
-	
+
 	return errors
 }
 
@@ -256,11 +256,11 @@ func (r *KeyDirectivesLint) isBuiltInScalar(typeName string) bool {
 func (r *KeyDirectivesLint) hasCommaSeparatedFields(fieldsString string) bool {
 	// Remove quotes if present
 	trimmed := strings.Trim(fieldsString, `"`)
-	
+
 	// Check for commas that are not inside nested braces/brackets
 	braceLevel := 0
 	bracketLevel := 0
-	
+
 	for _, char := range trimmed {
 		switch char {
 		case '{':
@@ -278,7 +278,7 @@ func (r *KeyDirectivesLint) hasCommaSeparatedFields(fieldsString string) bool {
 			}
 		}
 	}
-	
+
 	return false
 }
 
@@ -306,7 +306,7 @@ func (r *KeyDirectivesLint) checkResolvableFalseKeyDirectives(objectDef *ast.Def
 	for _, directive := range objectDef.Directives {
 		if directive.Name == "key" {
 			keyDirectives = append(keyDirectives, directive)
-			
+
 			// Check if this @key directive has resolvable: false
 			if r.hasResolvableFalse(directive) {
 				hasResolvableFalse = true
@@ -373,7 +373,7 @@ func (r *KeyDirectivesLint) checkResolvableFalseIncludesAllFields(objectDef *ast
 	// Only check if there's exactly one @key directive with resolvable: false
 	if len(keyDirectives) == 1 && r.hasResolvableFalse(keyDirectives[0]) {
 		keyDirective := keyDirectives[0]
-		
+
 		// Get the fields argument from the @key directive
 		var fieldsArg *ast.Argument
 		for _, arg := range keyDirective.Arguments {
@@ -395,7 +395,7 @@ func (r *KeyDirectivesLint) checkResolvableFalseIncludesAllFields(objectDef *ast
 
 		// Parse the key fields to get individual field names using fragment parsing
 		keyFields := r.parseResolvableFalseKeyFields(fieldsString, objectDef)
-		
+
 		// Get all field names from the object definition
 		objectFieldNames := make(map[string]bool)
 		for _, field := range objectDef.Fields {
@@ -409,7 +409,7 @@ func (r *KeyDirectivesLint) checkResolvableFalseIncludesAllFields(objectDef *ast
 				missingFields = append(missingFields, fieldName)
 			}
 		}
-		
+
 		// Sort missing fields for consistent error messages
 		sort.Strings(missingFields)
 
@@ -450,7 +450,7 @@ func (r *KeyDirectivesLint) parseResolvableFalseKeyFields(fieldsString string, o
 		// Only collect top-level field names (ignore nested selections for this validation)
 		result = append(result, fieldSel.Name)
 	}
-	
+
 	return result
 }
 
