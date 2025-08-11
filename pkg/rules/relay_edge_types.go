@@ -260,21 +260,6 @@ func (r *RelayEdgeTypes) getBaseTypeName(fieldType *ast.Type) string {
 	return ""
 }
 
-// getListElementTypeName extracts the element type name from a list type
-func (r *RelayEdgeTypes) getListElementTypeName(fieldType *ast.Type) string {
-	// If it's a NonNull wrapper, check the inner type
-	if fieldType.NonNull && fieldType.Elem != nil {
-		return r.getListElementTypeName(fieldType.Elem)
-	}
-
-	// If it's a list, get the element type
-	if fieldType.Elem != nil && fieldType.NamedType == "" {
-		return r.getBaseTypeName(fieldType.Elem)
-	}
-
-	return ""
-}
-
 // isValidNodeFieldType checks if a type kind is valid for a node field
 func (r *RelayEdgeTypes) isValidNodeFieldType(kind ast.DefinitionKind) bool {
 	switch kind {
