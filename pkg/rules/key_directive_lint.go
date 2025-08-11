@@ -24,7 +24,7 @@ func (r *KeyDirectivesLint) Name() string {
 
 // Description returns what this rule checks
 func (r *KeyDirectivesLint) Description() string {
-	return "Validates that all fields specified in @key directive exist in the object type and are primitive/scalar types only"
+	return "Validates that all fields specified in @key directive exist in the object type, are primitive/scalar types only, and are space-separated (not comma-separated)"
 }
 
 // Check validates @key directive rules
@@ -83,6 +83,29 @@ func (r *KeyDirectivesLint) validateKeyFields(objectDef *ast.Definition, keyDire
 	// Extract the fields string from the argument value
 	fieldsString := r.extractFieldsString(fieldsArg.Value)
 	if fieldsString == "" {
+		errors = append(errors, types.LintError{
+			Message: fmt.Sprintf("Missing or invalid 'fields' argument in @key directive for object '%s'", objectDef.Name),
+			Location: types.Location{
+				Line:   fieldsArg.Position.Line,
+				Column: fieldsArg.Position.Column,
+				File:   source.Name,
+			},
+			Rule: r.Name(),
+		})
+		return errors
+	}
+
+	// Check for comma-separated fields (not allowed)
+	if r.hasCommaSeparatedFields(fieldsString) {
+		errors = append(errors, types.LintError{
+			Message: fmt.Sprintf("@key directive fields must be space-separated, not comma-separated. Found comma in fields: '%s' for object '%s'", fieldsString, objectDef.Name),
+			Location: types.Location{
+				Line:   fieldsArg.Position.Line,
+				Column: fieldsArg.Position.Column,
+				File:   source.Name,
+			},
+			Rule: r.Name(),
+		})
 		return errors
 	}
 
@@ -217,4 +240,34 @@ func (r *KeyDirectivesLint) isBuiltInScalar(typeName string) bool {
 		"ID":      true,
 	}
 	return builtInScalars[typeName]
+}
+
+// hasCommaSeparatedFields checks if the fields string contains commas indicating comma-separated fields
+func (r *KeyDirectivesLint) hasCommaSeparatedFields(fieldsString string) bool {
+	// Remove quotes if present
+	trimmed := strings.Trim(fieldsString, `"`)
+	
+	// Check for commas that are not inside nested braces/brackets
+	braceLevel := 0
+	bracketLevel := 0
+	
+	for _, char := range trimmed {
+		switch char {
+		case '{':
+			braceLevel++
+		case '}':
+			braceLevel--
+		case '[':
+			bracketLevel++
+		case ']':
+			bracketLevel--
+		case ',':
+			// If we find a comma at the top level (not inside nested structures), it's invalid
+			if braceLevel == 0 && bracketLevel == 0 {
+				return true
+			}
+		}
+	}
+	
+	return false
 }

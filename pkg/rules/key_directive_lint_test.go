@@ -43,6 +43,20 @@ func TestKeyDirectivesLint(t *testing.T) {
 			expectedErrors: 0,
 		},
 		{
+			name: "Invalid: @key with comma-separated fields (multiple commas)",
+			schema: `
+				directive @key(fields: String!) on OBJECT
+				
+				type User @key(fields: "id, name, email") {
+					id: ID!
+					name: String
+					email: String
+				}
+			`,
+			expectedErrors: 1,
+			expectedMsg:    "@key directive fields must be space-separated, not comma-separated. Found comma in fields: 'id, name, email' for object 'User'",
+		},
+		{
 			name: "Invalid: @key with non-existing field",
 			schema: `
 				directive @key(fields: String!) on OBJECT
@@ -160,7 +174,7 @@ func TestKeyDirectivesLint(t *testing.T) {
 			expectedErrors: 0,
 		},
 		{
-			name: "Valid: @key with comma-separated fields",
+			name: "Invalid: @key with comma-separated fields (no spaces)",
 			schema: `
 				directive @key(fields: String!) on OBJECT
 				
@@ -170,7 +184,8 @@ func TestKeyDirectivesLint(t *testing.T) {
 					email: String
 				}
 			`,
-			expectedErrors: 0,
+			expectedErrors: 1,
+			expectedMsg:    "@key directive fields must be space-separated, not comma-separated. Found comma in fields: 'id,name' for object 'User'",
 		},
 		{
 			name: "Valid: Empty @key fields (edge case)",
@@ -182,7 +197,8 @@ func TestKeyDirectivesLint(t *testing.T) {
 					name: String
 				}
 			`,
-			expectedErrors: 0,
+			expectedErrors: 1,
+			expectedMsg:    "Missing or invalid 'fields' argument in @key directive for object 'User'",
 		},
 		{
 			name: "Invalid: @key field with object type",
