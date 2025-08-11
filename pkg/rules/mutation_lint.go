@@ -118,13 +118,10 @@ func (r *MutationLint) validateUnionSuccessTypes(schema *ast.Schema, source *ast
 
 	for _, unionType := range responseUnions {
 		successTypes := []string{}
-		errorTypes := []string{}
 
 		// Categorize union member types
 		for _, memberType := range unionType.Types {
-			if r.hasErrorDirective(schema.Types[memberType]) {
-				errorTypes = append(errorTypes, memberType)
-			} else {
+			if !r.hasErrorDirective(schema.Types[memberType]) {
 				successTypes = append(successTypes, memberType)
 			}
 		}
