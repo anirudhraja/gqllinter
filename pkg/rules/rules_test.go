@@ -2824,3 +2824,42 @@ func TestRelayConnectionTypes(t *testing.T) {
 		}
 	})
 }
+
+func TestUnsupportedDirectives(t *testing.T) {
+	rule := NewUnsupportedDirectives()
+
+	t.Run("should pass when no unsupported directives are defined and used", func(t *testing.T) {
+		schema := `
+		type User {
+			id: ID!
+			name: String @deprecated(reason: "Use fullName instead")
+		}
+		
+		enum Status {
+			ACTIVE
+			INACTIVE
+		}
+		`
+		errors := runRule(t, rule, schema)
+		if countRuleErrors(errors, "unsupported-directives") > 0 {
+			t.Error("Expected no errors when no unsupported directives are used")
+		}
+	})
+
+	t.Run("should flag multiple unsupported directives defined", func(t *testing.T) {
+		schema := `
+		directive @inaccessible on FIELD_DEFINITION
+		directive @external on FIELD_DEFINITION
+		directive @requires(fields: String!) on FIELD_DEFINITION
+		
+		type User {
+			id: ID!
+			name: String @inaccessible @external @requires(fields: "id")
+		}
+		`
+		errors := runRule(t, rule, schema)
+		if countRuleErrors(errors, "unsupported-directives") == 3 {
+			t.Error("Expected at least 3 errors for multiple unsupported directives defined")
+		}
+	})
+}
