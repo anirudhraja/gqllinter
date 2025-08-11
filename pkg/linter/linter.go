@@ -59,6 +59,7 @@ func New() *Linter {
 			rules.NewDirectivesCommonLint(),
 			rules.NewNoSameFileExtend(),
 			rules.NewKeyDirectivesLint(),
+			rules.NewMutationLint(),
 		},
 		enabledRules: make(map[string]bool),
 	}
