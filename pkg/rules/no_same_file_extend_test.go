@@ -60,15 +60,23 @@ func TestNoSameFileExtend(t *testing.T) {
 		{
 			name: "Invalid: Interface defined and extended in same file",
 			schema: `
+				directive @key(fields: String!) on INTERFACE
+
 				"""
 				test desc
 				"""
-				extend interface Node {
+				interface Node {
+					id: ID!
+				}
+				"""
+				test desc
+				"""
+				extend interface Node @key(fields: "id") {
 					createdAt: String
 				}
 			`,
 			expectedErrors: 1, // missing @key
-			expectedMsg:    "Extended interface type 'Node' at line 2 must have the @key directive.",
+			expectedMsg:    "Type 'Node' is defined at line 7 and extended at line 13 in the same file. Types should not be extended in the same file where they are defined.",
 		},
 		{
 			name: "Invalid: Input type extension not allowed",
