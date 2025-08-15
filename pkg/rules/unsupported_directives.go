@@ -3,7 +3,7 @@ package rules
 import (
 	"fmt"
 	"github.com/anirudhraja/gqllinter/pkg/types"
-	"github.com/vektah/gqlparser/v2/ast"
+	"github.com/nishant-rn/gqlparser/v2/ast"
 )
 
 // UnsupportedDirectives checks that no unsupported directives are used
@@ -42,6 +42,7 @@ func (r *UnsupportedDirectives) Check(schema *ast.Schema, source *ast.Source) []
 		"deprecated":    true,
 		"specifiedBy":   true,
 		"defer":         true,
+		"oneOf":         true,
 	}
 
 	for _, dir := range schema.Directives {

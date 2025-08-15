@@ -1,7 +1,7 @@
 package types
 
 import (
-	"github.com/vektah/gqlparser/v2/ast"
+	"github.com/nishant-rn/gqlparser/v2/ast"
 )
 
 // LintError represents a linting error with location information

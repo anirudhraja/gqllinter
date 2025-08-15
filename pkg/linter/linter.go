@@ -6,8 +6,8 @@ import (
 	"path/filepath"
 	"plugin"
 
-	"github.com/vektah/gqlparser/v2"
-	"github.com/vektah/gqlparser/v2/ast"
+	"github.com/nishant-rn/gqlparser/v2"
+	"github.com/nishant-rn/gqlparser/v2/ast"
 
 	"github.com/anirudhraja/gqllinter/pkg/rules"
 	"github.com/anirudhraja/gqllinter/pkg/types"

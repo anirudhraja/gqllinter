@@ -4,8 +4,8 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/vektah/gqlparser/v2"
-	"github.com/vektah/gqlparser/v2/ast"
+	"github.com/nishant-rn/gqlparser/v2"
+	"github.com/nishant-rn/gqlparser/v2/ast"
 )
 
 func TestMutationLint(t *testing.T) {

@@ -1,10 +1,10 @@
 package rules
 
 import (
+	"github.com/nishant-rn/gqlparser/v2"
 	"testing"
 
-	"github.com/vektah/gqlparser/v2"
-	"github.com/vektah/gqlparser/v2/ast"
+	"github.com/nishant-rn/gqlparser/v2/ast"
 )
 
 func TestNoSameFileExtend(t *testing.T) {
@@ -60,12 +60,23 @@ func TestNoSameFileExtend(t *testing.T) {
 		{
 			name: "Invalid: Interface defined and extended in same file",
 			schema: `
-				extend interface Node {
+				directive @key(fields: String!) on INTERFACE
+
+				"""
+				test desc
+				"""
+				interface Node {
+					id: ID!
+				}
+				"""
+				test desc
+				"""
+				extend interface Node @key(fields: "id") {
 					createdAt: String
 				}
 			`,
 			expectedErrors: 1, // missing @key
-			expectedMsg:    "Extended interface type 'Node' at line 2 must have the @key directive.",
+			expectedMsg:    "Type 'Node' is defined at line 7 and extended at line 13 in the same file. Types should not be extended in the same file where they are defined.",
 		},
 		{
 			name: "Invalid: Input type extension not allowed",
@@ -125,7 +136,9 @@ func TestNoSameFileExtend(t *testing.T) {
 			schema: `
 				enum Status { ACTIVE }
 				input UserInput { name: String }
-				
+				"""
+				some comment
+				"""
 				extend enum Status { PENDING }
 				extend input UserInput { email: String }
 			`,
