@@ -1,10 +1,10 @@
 package rules
 
 import (
+	"github.com/nishant-rn/gqlparser/v2"
 	"testing"
 
-	"github.com/vektah/gqlparser/v2"
-	"github.com/vektah/gqlparser/v2/ast"
+	"github.com/nishant-rn/gqlparser/v2/ast"
 )
 
 func TestNoSameFileExtend(t *testing.T) {
@@ -60,6 +60,9 @@ func TestNoSameFileExtend(t *testing.T) {
 		{
 			name: "Invalid: Interface defined and extended in same file",
 			schema: `
+				"""
+				test desc
+				"""
 				extend interface Node {
 					createdAt: String
 				}
@@ -125,7 +128,9 @@ func TestNoSameFileExtend(t *testing.T) {
 			schema: `
 				enum Status { ACTIVE }
 				input UserInput { name: String }
-				
+				"""
+				some comment
+				"""
 				extend enum Status { PENDING }
 				extend input UserInput { email: String }
 			`,

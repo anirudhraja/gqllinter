@@ -5,7 +5,7 @@ import (
 	"strings"
 
 	"github.com/anirudhraja/gqllinter/pkg/types"
-	"github.com/vektah/gqlparser/v2/ast"
+	"github.com/nishant-rn/gqlparser/v2/ast"
 )
 
 // InputEnumSuffix checks that input enums are distinct from output enums and are suffixed with "Input"

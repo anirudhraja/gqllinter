@@ -6,8 +6,8 @@ import (
 	"strings"
 
 	"github.com/anirudhraja/gqllinter/pkg/types"
-	"github.com/vektah/gqlparser/v2/ast"
-	"github.com/vektah/gqlparser/v2/parser"
+	"github.com/nishant-rn/gqlparser/v2/ast"
+	"github.com/nishant-rn/gqlparser/v2/parser"
 )
 
 // KeyDirectivesLint checks @key directive validation rules

@@ -4,8 +4,8 @@ import (
 	"testing"
 
 	"github.com/anirudhraja/gqllinter/pkg/types"
-	"github.com/vektah/gqlparser/v2"
-	"github.com/vektah/gqlparser/v2/ast"
+	"github.com/nishant-rn/gqlparser/v2"
+	"github.com/nishant-rn/gqlparser/v2/ast"
 )
 
 // Helper function to parse GraphQL schema from string for directive_lints tests

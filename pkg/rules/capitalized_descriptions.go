@@ -6,7 +6,7 @@ import (
 	"unicode"
 
 	"github.com/anirudhraja/gqllinter/pkg/types"
-	"github.com/vektah/gqlparser/v2/ast"
+	"github.com/nishant-rn/gqlparser/v2/ast"
 )
 
 // CapitalizedDescriptions checks that all descriptions start with capital letters

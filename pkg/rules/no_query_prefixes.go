@@ -5,7 +5,7 @@ import (
 	"strings"
 
 	"github.com/anirudhraja/gqllinter/pkg/types"
-	"github.com/vektah/gqlparser/v2/ast"
+	"github.com/nishant-rn/gqlparser/v2/ast"
 )
 
 // NoQueryPrefixes checks that Query fields don't have unnecessary prefixes

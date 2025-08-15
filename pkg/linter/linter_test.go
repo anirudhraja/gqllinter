@@ -1,6 +1,7 @@
 package linter
 
 import (
+	"fmt"
 	"os"
 	"path/filepath"
 	"strings"
@@ -62,6 +63,9 @@ func TestNew(t *testing.T) {
 	expectedRuleCount := 30 // Based on the rules in the New() function
 	if len(linter.rules) != expectedRuleCount {
 		t.Errorf("Expected %d rules, got %d", expectedRuleCount, len(linter.rules))
+	}
+	for _, rule := range linter.rules {
+		fmt.Println(rule.Name())
 	}
 
 	// Verify enabledRules map is initialized

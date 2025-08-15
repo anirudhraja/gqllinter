@@ -5,7 +5,7 @@ import (
 	"strings"
 
 	"github.com/anirudhraja/gqllinter/pkg/types"
-	"github.com/vektah/gqlparser/v2/ast"
+	"github.com/nishant-rn/gqlparser/v2/ast"
 )
 
 // EnumDescriptions checks that enum members have descriptions except for UNKNOWN

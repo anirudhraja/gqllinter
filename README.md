@@ -657,7 +657,7 @@ You can create custom rules by implementing the `Rule` interface:
 package main
 
 import (
-    "github.com/vektah/gqlparser/v2/ast"
+    "github.com/nishant-rn/gqlparser/v2/ast"
     "github.com/gqllinter/pkg/linter"
 )
 
