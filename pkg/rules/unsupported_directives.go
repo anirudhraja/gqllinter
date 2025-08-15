@@ -42,6 +42,7 @@ func (r *UnsupportedDirectives) Check(schema *ast.Schema, source *ast.Source) []
 		"deprecated":    true,
 		"specifiedBy":   true,
 		"defer":         true,
+		"oneOf":         true,
 	}
 
 	for _, dir := range schema.Directives {
