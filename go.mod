@@ -2,8 +2,6 @@ module github.com/anirudhraja/gqllinter
 
 go 1.22
 
-toolchain go1.24.6
-
 require (
 	github.com/nishant-rn/gqlparser/v2 v2.5.32
 	github.com/spf13/cobra v1.8.0
