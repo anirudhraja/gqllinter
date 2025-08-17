@@ -1097,7 +1097,7 @@ func TestEnumUnknownCase(t *testing.T) {
 		if countRuleErrors(errors, "enum-unknown-case") == 0 {
 			t.Error("Expected error for enum with UNKNOWN value")
 		}
-		
+
 		// Check that the error message is correct
 		expectedMessage := "Enum `UserStatus` contains an UNKNOWN value. UNKNOWN as a enum value is not allowed."
 		if !containsError(errors, expectedMessage) {
