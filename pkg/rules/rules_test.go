@@ -1077,28 +1077,7 @@ func TestCapitalizedDescriptions(t *testing.T) {
 func TestEnumUnknownCase(t *testing.T) {
 	rule := NewEnumUnknownCase()
 
-	t.Run("should flag output enums without UNKNOWN", func(t *testing.T) {
-		schema := `
-		type Query {
-			user: User
-		}
-		
-		type User {
-			status: UserStatus!
-		}
-		
-		enum UserStatus {
-			ACTIVE
-			INACTIVE
-		}
-		`
-		errors := runRule(t, rule, schema)
-		if countRuleErrors(errors, "enum-unknown-case") == 0 {
-			t.Error("Expected error for enum without UNKNOWN case")
-		}
-	})
-
-	t.Run("should pass output enums with UNKNOWN", func(t *testing.T) {
+	t.Run("should flag enums with UNKNOWN values", func(t *testing.T) {
 		schema := `
 		type Query {
 			user: User
@@ -1115,8 +1094,59 @@ func TestEnumUnknownCase(t *testing.T) {
 		}
 		`
 		errors := runRule(t, rule, schema)
+		if countRuleErrors(errors, "enum-unknown-case") == 0 {
+			t.Error("Expected error for enum with UNKNOWN value")
+		}
+
+		// Check that the error message is correct
+		expectedMessage := "Enum `UserStatus` contains an UNKNOWN value. UNKNOWN as a enum value is not allowed."
+		if !containsError(errors, expectedMessage) {
+			t.Error("Expected specific error message about UNKNOWN value")
+		}
+	})
+
+	t.Run("should pass enums without UNKNOWN values", func(t *testing.T) {
+		schema := `
+		type Query {
+			user: User
+		}
+		
+		type User {
+			status: UserStatus!
+		}
+		
+		enum UserStatus {
+			ACTIVE
+			INACTIVE
+			PENDING
+		}
+		`
+		errors := runRule(t, rule, schema)
 		if countRuleErrors(errors, "enum-unknown-case") > 0 {
-			t.Error("Expected no unknown errors for enum with UNKNOWN case")
+			t.Error("Expected no errors for enum without UNKNOWN value")
+		}
+	})
+
+	t.Run("should flag multiple enums with UNKNOWN values", func(t *testing.T) {
+		schema := `
+		enum Status1 {
+			UNKNOWN
+			ACTIVE
+		}
+		
+		enum Status2 {
+			UNKNOWN
+			INACTIVE
+		}
+		
+		enum Status3 {
+			ACTIVE
+			INACTIVE
+		}
+		`
+		errors := runRule(t, rule, schema)
+		if countRuleErrors(errors, "enum-unknown-case") != 2 {
+			t.Errorf("Expected exactly 2 errors for enums with UNKNOWN values, got %d", countRuleErrors(errors, "enum-unknown-case"))
 		}
 	})
 }
