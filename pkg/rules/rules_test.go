@@ -2893,3 +2893,135 @@ func TestUnsupportedDirectives(t *testing.T) {
 		}
 	})
 }
+
+func TestNoUnimplementedInterface(t *testing.T) {
+	rule := NewNoUnimplementedInterface()
+
+	t.Run("should flag interfaces with no implementations", func(t *testing.T) {
+		schema := `
+		interface Node {
+			id: ID!
+		}
+		
+		interface Timestamped {
+			createdAt: String!
+			updatedAt: String!
+		}
+		
+		type User {
+			id: ID!
+			name: String!
+		}
+		`
+		errors := runRule(t, rule, schema)
+		if countRuleErrors(errors, "no-unimplemented-interface") != 2 {
+			t.Errorf("Expected exactly 2 errors for unimplemented interfaces, got %d", countRuleErrors(errors, "no-unimplemented-interface"))
+		}
+
+		expectedMessages := []string{
+			"Interface 'Node' is not implemented by any type",
+			"Interface 'Timestamped' is not implemented by any type",
+		}
+
+		for _, expectedMessage := range expectedMessages {
+			if !containsError(errors, expectedMessage) {
+				t.Errorf("Expected error message: %s", expectedMessage)
+			}
+		}
+	})
+
+	t.Run("should pass interfaces that are implemented by object types", func(t *testing.T) {
+		schema := `
+		interface Node {
+			id: ID!
+		}
+		
+		interface Timestamped {
+			createdAt: String!
+			updatedAt: String!
+		}
+		
+		type User implements Node & Timestamped {
+			id: ID!
+			name: String!
+			createdAt: String!
+			updatedAt: String!
+		}
+		
+		type Post implements Node {
+			id: ID!
+			title: String!
+		}
+		`
+		errors := runRule(t, rule, schema)
+		if countRuleErrors(errors, "no-unimplemented-interface") > 0 {
+			t.Errorf("Expected no errors for implemented interfaces, got %d", countRuleErrors(errors, "no-unimplemented-interface"))
+		}
+	})
+
+	t.Run("should pass interfaces that are implemented by other interfaces", func(t *testing.T) {
+		schema := `
+		interface Node {
+			id: ID!
+		}
+		
+		interface ContentNode implements Node {
+			id: ID!
+			title: String!
+		}
+		
+		type Post implements ContentNode & Node {
+			id: ID!
+			title: String!
+			content: String!
+		}
+		`
+		errors := runRule(t, rule, schema)
+		if countRuleErrors(errors, "no-unimplemented-interface") > 0 {
+			t.Errorf("Expected no errors for interfaces implemented by other interfaces, got %d", countRuleErrors(errors, "no-unimplemented-interface"))
+		}
+	})
+
+	t.Run("should handle mixed scenario with some implemented and some unimplemented interfaces", func(t *testing.T) {
+		schema := `
+		interface Node {
+			id: ID!
+		}
+		
+		interface Timestamped {
+			createdAt: String!
+			updatedAt: String!
+		}
+		
+		interface Unused {
+			value: String!
+		}
+		
+		type User implements Node {
+			id: ID!
+			name: String!
+		}
+		`
+		errors := runRule(t, rule, schema)
+		if countRuleErrors(errors, "no-unimplemented-interface") != 2 {
+			t.Errorf("Expected exactly 2 errors for unimplemented interfaces, got %d", countRuleErrors(errors, "no-unimplemented-interface"))
+		}
+
+		expectedMessages := []string{
+			"Interface 'Timestamped' is not implemented by any type",
+			"Interface 'Unused' is not implemented by any type",
+		}
+
+		for _, expectedMessage := range expectedMessages {
+			if !containsError(errors, expectedMessage) {
+				t.Errorf("Expected error message: %s", expectedMessage)
+			}
+		}
+
+		// Node should not be flagged as it's implemented by User
+		unexpectedMessage := "Interface 'Node' is not implemented by any type"
+		if containsError(errors, unexpectedMessage) {
+			t.Errorf("Did not expect error message: %s", unexpectedMessage)
+		}
+	})
+}
