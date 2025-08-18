@@ -23,7 +23,7 @@ func (r *OperationResponseName) Name() string {
 
 // Description returns what this rule checks
 func (r *OperationResponseName) Description() string {
-	return "Require query/mutation response type to be always called Query/Mutation name + 'Response' in PascalCase and non-nullable"
+	return "Require query/mutation response type to NOT be called Query/Mutation name + 'Response[Version]' in PascalCase and must be non-nullable"
 }
 
 // Check validates that query/mutation response types follow the standard naming pattern
@@ -61,11 +61,10 @@ func (r *OperationResponseName) checkFields(fields ast.FieldList, operationType 
 				column = field.Position.Column
 			}
 
-			expectedType := r.capitalizeFirst(field.Name) + "Response!"
 			actualType := r.typeToString(field.Type)
 
 			errors = append(errors, types.LintError{
-				Message: fmt.Sprintf("%s `%s` response type should be non-nullable (`%s` instead of `%s`).", operationType, field.Name, expectedType, actualType),
+				Message: fmt.Sprintf("%s `%s` response type should be non-nullable (`%s!` instead of `%s`).", operationType, field.Name, r.getBaseTypeName(field.Type), actualType),
 				Location: types.Location{
 					Line:   line,
 					Column: column,
@@ -75,21 +74,19 @@ func (r *OperationResponseName) checkFields(fields ast.FieldList, operationType 
 			})
 		}
 
-		// Check if the response type follows the naming convention
-		expectedResponseType := r.capitalizeFirst(field.Name) + "Response"
+		// Check if the response type follows the forbidden naming convention
+		forbiddenResponseType := r.capitalizeFirst(field.Name) + "Response"
 		actualResponseType := r.getBaseTypeName(field.Type)
 
-		if !r.isValidResponseType(actualResponseType, expectedResponseType) {
+		if r.isInvalidResponseType(actualResponseType, forbiddenResponseType) {
 			line, column := 1, 1
 			if field.Position != nil {
 				line = field.Position.Line
 				column = field.Position.Column
 			}
 
-			expectedTypeWithNonNull := expectedResponseType + "!"
-
 			errors = append(errors, types.LintError{
-				Message: fmt.Sprintf("%s `%s` response type should be named `%s` or `%s[Version]`, not `%s`. Expected: `%s`", operationType, field.Name, expectedResponseType, expectedResponseType, actualResponseType, expectedTypeWithNonNull),
+				Message: fmt.Sprintf("%s `%s` response type should not be named `%s` or `%s[Version]`", operationType, field.Name, forbiddenResponseType, forbiddenResponseType),
 				Location: types.Location{
 					Line:   line,
 					Column: column,
@@ -113,18 +110,18 @@ func (r *OperationResponseName) getBaseTypeName(fieldType *ast.Type) string {
 	return baseType.Name()
 }
 
-// isValidResponseType checks if the actual type name matches the expected pattern
-// Allows for both "Response" and "Response[Version]" patterns (e.g., "CreateUserResponse", "CreateUserResponseV2")
-func (r *OperationResponseName) isValidResponseType(actualType, expectedType string) bool {
+// isInvalidResponseType checks if the actual type name matches the forbidden pattern
+// Forbids both "Response" and "Response[Version]" patterns (e.g., "CreateUserResponse", "CreateUserResponseV2")
+func (r *OperationResponseName) isInvalidResponseType(actualType, forbiddenType string) bool {
 	// Direct match
-	if actualType == expectedType {
+	if actualType == forbiddenType {
 		return true
 	}
 
-	// Check for versioned pattern: {ExpectedType}V{number} or {ExpectedType}Version{number}
-	if strings.HasPrefix(actualType, expectedType) {
-		suffix := actualType[len(expectedType):]
-		// Allow patterns like "V1", "V2", "Version1", "Version2", etc.
+	// Check for versioned pattern: {ForbiddenType}V{number} or {ForbiddenType}Version{number}
+	if strings.HasPrefix(actualType, forbiddenType) {
+		suffix := actualType[len(forbiddenType):]
+		// Forbid patterns like "V1", "V2", "Version1", "Version2", etc.
 		if strings.HasPrefix(suffix, "V") || strings.HasPrefix(suffix, "Version") {
 			return true
 		}
