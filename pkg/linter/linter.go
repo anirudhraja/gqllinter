@@ -61,6 +61,7 @@ func New() *Linter {
 			rules.NewKeyDirectivesLint(),
 			rules.NewMutationLint(),
 			rules.NewBasicLint(),
+			rules.NewNoUnimplementedInterface(),
 		},
 		enabledRules: make(map[string]bool),
 	}
