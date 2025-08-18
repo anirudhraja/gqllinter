@@ -727,241 +727,96 @@ func TestAlphabetize(t *testing.T) {
 func TestInputName(t *testing.T) {
 	rule := NewInputName()
 
-	t.Run("should flag incorrect mutation argument naming", func(t *testing.T) {
-		schema := `
-		type Mutation {
-			createUser(data: CreateUserRequest!): User
-		}
-		
-		input CreateUserRequest {
-			name: String!
-		}
-		
-		type User {
-			id: ID!
-		}
-		`
-		errors := runRule(t, rule, schema)
-		if countRuleErrors(errors, "operation-input-name") != 1 {
-			t.Errorf("Expected exactly 1 error for incorrect argument naming, got %d", countRuleErrors(errors, "operation-input-name"))
-		}
-
-		expectedMessage := "Mutation `createUser` argument should be named 'request', not 'data'."
-		if !containsError(errors, expectedMessage) {
-			t.Error("Expected error message for incorrect argument name not found")
-		}
-	})
-
-	t.Run("should flag incorrect mutation input type naming", func(t *testing.T) {
-		schema := `
-		type Mutation {
-			createUser(request: CreateUserInput!): User
-		}
-		
-		input CreateUserInput {
-			name: String!
-		}
-		
-		type User {
-			id: ID!
-		}
-		`
-		errors := runRule(t, rule, schema)
-		if countRuleErrors(errors, "operation-input-name") != 1 {
-			t.Errorf("Expected exactly 1 error for incorrect input type naming, got %d", countRuleErrors(errors, "operation-input-name"))
-		}
-
-		expectedMessage := "Mutation `createUser` input type should be named `CreateUserRequest` or `CreateUserRequest[Version]`, not `CreateUserInput`."
-		if !containsError(errors, expectedMessage) {
-			t.Error("Expected error message for incorrect input type name not found")
-		}
-	})
-
-	t.Run("should pass correct mutation naming", func(t *testing.T) {
-		schema := `
-		type Mutation {
-			createUser(request: CreateUserRequest!): User
-			updateProfile(request: UpdateProfileRequest!): Profile
-		}
-		
-		input CreateUserRequest {
-			name: String!
-		}
-		
-		input UpdateProfileRequest {
-			bio: String
-		}
-		
-		type User {
-			id: ID!
-		}
-		
-		type Profile {
-			id: ID!
-		}
-		`
-		errors := runRule(t, rule, schema)
-		if countRuleErrors(errors, "operation-input-name") > 0 {
-			t.Errorf("Expected no operation-input-name errors for correct naming, got %d", countRuleErrors(errors, "operation-input-name"))
-		}
-	})
-
-	t.Run("should pass versioned request types", func(t *testing.T) {
-		schema := `
-		type Mutation {
-			createUserV2(request: CreateUserRequestV2!): User
-			updateProfile(request: UpdateProfileRequestVersion1!): Profile
-			deleteUser(request: DeleteUserRequestV3!): Boolean
-		}
-		
-		input CreateUserRequestV2 {
-			name: String!
-			email: String!
-		}
-		
-		input UpdateProfileRequestVersion1 {
-			bio: String
-		}
-		
-		input DeleteUserRequestV3 {
-			id: ID!
-		}
-		
-		type User {
-			id: ID!
-		}
-		
-		type Profile {
-			id: ID!
-		}
-		`
-		errors := runRule(t, rule, schema)
-		if countRuleErrors(errors, "operation-input-name") > 1 {
-			t.Errorf("Expected exactly one operation-input-name errors for versioned request types, got %d", countRuleErrors(errors, "operation-input-name"))
-		}
-	})
-
-	t.Run("should flag mutations with multiple arguments", func(t *testing.T) {
-		schema := `
-		type Mutation {
-			createUser(name: String!, email: String!): User
-			updateUser(id: ID!, data: UpdateUserData!): User
-		}
-		
-		input UpdateUserData {
-			name: String
-		}
-		
-		type User {
-			id: ID!
-		}
-		`
-		errors := runRule(t, rule, schema)
-		if countRuleErrors(errors, "operation-input-name") != 2 {
-			t.Errorf("Expected exactly 2 errors for mutations with multiple arguments, got %d", countRuleErrors(errors, "operation-input-name"))
-		}
-
-		expectedMessages := []string{
-			"Mutation `createUser` has 2 arguments. Consider consolidating into a single 'request' argument of type `CreateUserRequest`.",
-			"Mutation `updateUser` has 2 arguments. Consider consolidating into a single 'request' argument of type `UpdateUserRequest`.",
-		}
-
-		for _, expectedMsg := range expectedMessages {
-			if !containsError(errors, expectedMsg) {
-				t.Errorf("Expected error message '%s' not found", expectedMsg)
-			}
-		}
-	})
-
-	t.Run("should check query arguments", func(t *testing.T) {
-		schema := `
-		type Query {
-			getUser(input: GetUserInput!): User
-			searchUsers(data: SearchUsersData!): [User!]!
-		}
-		
-		input GetUserInput {
-			id: ID!
-		}
-		
-		input SearchUsersData {
-			query: String!
-		}
-		
-		type User {
-			id: ID!
-		}
-		`
-		errors := runRule(t, rule, schema)
-		if countRuleErrors(errors, "operation-input-name") != 4 {
-			t.Errorf("Expected exactly 4 errors for incorrect query naming, got %d", countRuleErrors(errors, "operation-input-name"))
-		}
-
-		expectedMessages := []string{
-			"Query `getUser` argument should be named 'request', not 'input'.",
-			"Query `getUser` input type should be named `GetUserRequest` or `GetUserRequest[Version]`, not `GetUserInput`.",
-			"Query `searchUsers` argument should be named 'request', not 'data'.",
-			"Query `searchUsers` input type should be named `SearchUsersRequest` or `SearchUsersRequest[Version]`, not `SearchUsersData`.",
-		}
-
-		for _, expectedMsg := range expectedMessages {
-			if !containsError(errors, expectedMsg) {
-				t.Errorf("Expected error message '%s' not found", expectedMsg)
-			}
-		}
-	})
-
-	t.Run("should pass correct query naming", func(t *testing.T) {
+	t.Run("should flag input types with Request suffix", func(t *testing.T) {
 		schema := `
 		type Query {
 			getUser(request: GetUserRequest!): User
-			searchUsers(request: SearchUsersRequestV2!): [User!]!
-			filterProducts(request: FilterProductsRequest!): [Product!]!
+			listUsers(request: ListUsersRequest!): [User!]!
+		}
+		
+		type Mutation {
+			createUser(request: CreateUserRequest!): User!
+			updateUser(request: UpdateUserRequest!): User!
+		}
+		
+		type User {
+			id: ID!
+			name: String!
 		}
 		
 		input GetUserRequest {
 			id: ID!
 		}
 		
-		input SearchUsersRequestV2 {
-			query: String!
+		input ListUsersRequest {
 			limit: Int
+			offset: Int
 		}
 		
-		input FilterProductsRequest {
-			category: String
-			priceRange: PriceRange
+		input CreateUserRequest {
+			name: String!
+			email: String!
 		}
 		
-		input PriceRange {
-			min: Float
-			max: Float
+		input UpdateUserRequest {
+			id: ID!
+			name: String
+			email: String
+		}
+		`
+		errors := runRule(t, rule, schema)
+		errorCount := countRuleErrors(errors, "operation-input-name")
+		if errorCount != 4 {
+			t.Errorf("Expected 4 errors for forbidden Request suffix types, got %d", errorCount)
+		}
+	})
+
+	t.Run("should flag versioned Request input types", func(t *testing.T) {
+		schema := `
+		type Query {
+			getUser(request: GetUserRequestV2!): User
+			listUsers(request: ListUsersRequestVersion3!): [User!]!
+		}
+		
+		type Mutation {
+			createUser(request: CreateUserRequestV1!): User!
 		}
 		
 		type User {
 			id: ID!
 		}
 		
-		type Product {
+		input GetUserRequestV2 {
 			id: ID!
+			includeProfile: Boolean
+		}
+		
+		input ListUsersRequestVersion3 {
+			limit: Int
+			offset: Int
+			filter: String
+		}
+		
+		input CreateUserRequestV1 {
+			name: String!
 		}
 		`
 		errors := runRule(t, rule, schema)
-		if countRuleErrors(errors, "operation-input-name") > 0 {
-			t.Errorf("Expected no operation-input-name errors for correct query naming, got %d", countRuleErrors(errors, "operation-input-name"))
+		errorCount := countRuleErrors(errors, "operation-input-name")
+		if errorCount != 3 {
+			t.Errorf("Expected 3 errors for forbidden versioned Request suffix types, got %d", errorCount)
 		}
 	})
 
-	t.Run("should handle operations without arguments", func(t *testing.T) {
+	t.Run("should pass with operations without arguments", func(t *testing.T) {
 		schema := `
 		type Query {
-			getAllUsers: [User!]!
-			getCurrentTime: String!
+			allUsers: [User!]!
+			currentTime: String!
 		}
 		
 		type Mutation {
 			refreshCache: Boolean!
-			ping: String!
 		}
 		
 		type User {
@@ -970,25 +825,137 @@ func TestInputName(t *testing.T) {
 		`
 		errors := runRule(t, rule, schema)
 		if countRuleErrors(errors, "operation-input-name") > 0 {
-			t.Errorf("Expected no operation-input-name errors for operations without arguments, got %d", countRuleErrors(errors, "operation-input-name"))
+			t.Error("Expected no errors for operations without arguments")
 		}
 	})
 
-	t.Run("should handle schema without query or mutation", func(t *testing.T) {
+	t.Run("should flag incorrect argument names and Request suffix types", func(t *testing.T) {
 		schema := `
-		type User {
-			id: ID!
-			name: String
+		type Query {
+			getUser(input: GetUserRequest!): User
+			listUsers(params: ListUsersRequest!): [User!]!
 		}
 		
-		type Product {
+		type Mutation {
+			createUser(data: CreateUserRequest!): User!
+		}
+		
+		type User {
 			id: ID!
-			title: String
+		}
+		
+		input GetUserRequest {
+			id: ID!
+		}
+		
+		input ListUsersRequest {
+			limit: Int
+		}
+		
+		input CreateUserRequest {
+			name: String!
+		}
+		`
+		errors := runRule(t, rule, schema)
+		errorCount := countRuleErrors(errors, "operation-input-name")
+		if errorCount != 6 {
+			t.Errorf("Expected 6 errors (3 wrong argument names + 3 forbidden Request suffix types), got %d", errorCount)
+		}
+	})
+
+	t.Run("should pass with proper input type names without Request suffix", func(t *testing.T) {
+		schema := `
+		type Query {
+			getUser(request: UserInput!): User
+			listUsers(request: UsersFilter!): [User!]!
+		}
+		
+		type Mutation {
+			createUser(request: NewUserData!): User!
+		}
+		
+		type User {
+			id: ID!
+		}
+		
+		input UserInput {
+			id: ID!
+		}
+		
+		input UsersFilter {
+			limit: Int
+		}
+		
+		input NewUserData {
+			name: String!
 		}
 		`
 		errors := runRule(t, rule, schema)
 		if countRuleErrors(errors, "operation-input-name") > 0 {
-			t.Errorf("Expected no operation-input-name errors for schema without operations, got %d", countRuleErrors(errors, "operation-input-name"))
+			t.Error("Expected no errors for input types without Request suffix")
+		}
+	})
+
+	t.Run("should suggest consolidating multiple arguments", func(t *testing.T) {
+		schema := `
+		type Query {
+			getUser(id: ID!, includeProfile: Boolean): User
+			listUsers(limit: Int, offset: Int, filter: String): [User!]!
+		}
+		
+		type Mutation {
+			createUser(name: String!, email: String!, age: Int): User!
+		}
+		
+		type User {
+			id: ID!
+		}
+		`
+		errors := runRule(t, rule, schema)
+		errorCount := countRuleErrors(errors, "operation-input-name")
+		if errorCount != 3 {
+			t.Errorf("Expected 3 errors suggesting argument consolidation, got %d", errorCount)
+		}
+	})
+
+	t.Run("should handle mixed valid and invalid cases", func(t *testing.T) {
+		schema := `
+		type Query {
+			getUser(request: GetUserRequest!): User
+			listUsers(input: ListUsersRequest!): [User!]!
+			searchUsers(query: String!, limit: Int): [User!]!
+		}
+		
+		type Mutation {
+			createUser(request: CreateUserRequest!): User!
+			updateUser(data: UpdateUserInput!): User!
+		}
+		
+		type User {
+			id: ID!
+		}
+		
+		input GetUserRequest {
+			id: ID!
+		}
+		
+		input ListUsersRequest {
+			limit: Int
+		}
+		
+		input CreateUserRequest {
+			name: String!
+		}
+		
+		input UpdateUserInput {
+			id: ID!
+			name: String
+		}
+		`
+		errors := runRule(t, rule, schema)
+		errorCount := countRuleErrors(errors, "operation-input-name")
+		if errorCount != 6 {
+			t.Errorf("Expected 6 errors (3 Request suffix types + 2 wrong argument names + 1 multiple arguments), got %d", errorCount)
 		}
 	})
 }
@@ -1823,7 +1790,7 @@ func TestRelayPageInfo(t *testing.T) {
 func TestOperationResponseName(t *testing.T) {
 	rule := NewOperationResponseName()
 
-	t.Run("valid response types", func(t *testing.T) {
+	t.Run("should flag response types with Response suffix", func(t *testing.T) {
 		schema := `
 		type Query {
 			getUser: GetUserResponse!
@@ -1872,15 +1839,16 @@ func TestOperationResponseName(t *testing.T) {
 		`
 
 		errors := runRule(t, rule, schema)
-		if len(errors) != 0 {
-			t.Errorf("Expected no errors for valid response types, got %d errors: %v", len(errors), errors)
+		ruleErrors := countRuleErrors(errors, "operation-response-name")
+		if ruleErrors != 5 {
+			t.Errorf("Expected 5 errors for forbidden Response suffix types, got %d", ruleErrors)
 		}
 	})
 
-	t.Run("invalid response type names", func(t *testing.T) {
+	t.Run("should pass with response type names without Response suffix", func(t *testing.T) {
 		schema := `
 		type Query {
-			getUser: UserResponse!
+			getUser: UserResult!
 			listUsers: UsersData!
 		}
 		
@@ -1888,7 +1856,44 @@ func TestOperationResponseName(t *testing.T) {
 			createUser: CreateUserResult!
 		}
 		
-		type UserResponse {
+		type UserResult {
+			user: User
+		}
+		
+		type UsersData {
+			users: [User!]!
+		}
+		
+		type CreateUserResult {
+			user: User
+		}
+		
+		type User {
+			id: ID!
+			name: String!
+		}
+		`
+
+		errors := runRule(t, rule, schema)
+		ruleErrors := countRuleErrors(errors, "operation-response-name")
+
+		if ruleErrors != 0 {
+			t.Errorf("Expected no errors for response types without Response suffix, got %d", ruleErrors)
+		}
+	})
+
+	t.Run("should flag nullable response types", func(t *testing.T) {
+		schema := `
+		type Query {
+			getUser: UserResult
+			listUsers: UsersData
+		}
+		
+		type Mutation {
+			createUser: CreateUserResult
+		}
+		
+		type UserResult {
 			user: User
 		}
 		
@@ -1910,64 +1915,14 @@ func TestOperationResponseName(t *testing.T) {
 		ruleErrors := countRuleErrors(errors, "operation-response-name")
 
 		if ruleErrors != 3 {
-			t.Errorf("Expected 3 errors for invalid response type names, got %d", ruleErrors)
-		}
-
-		// Check specific error messages
-		expectedMessages := []string{
-			"Query `getUser` response type should be named `GetUserResponse` or `GetUserResponse[Version]`, not `UserResponse`. Expected: `GetUserResponse!`",
-			"Query `listUsers` response type should be named `ListUsersResponse` or `ListUsersResponse[Version]`, not `UsersData`. Expected: `ListUsersResponse!`",
-			"Mutation `createUser` response type should be named `CreateUserResponse` or `CreateUserResponse[Version]`, not `CreateUserResult`. Expected: `CreateUserResponse!`",
-		}
-
-		for _, expectedMsg := range expectedMessages {
-			if !containsError(errors, expectedMsg) {
-				t.Errorf("Expected error message: %s", expectedMsg)
-			}
-		}
-	})
-
-	t.Run("nullable response types", func(t *testing.T) {
-		schema := `
-		type Query {
-			getUser: GetUserResponse
-			listUsers: ListUsersResponse
-		}
-		
-		type Mutation {
-			createUser: CreateUserResponse
-		}
-		
-		type GetUserResponse {
-			user: User
-		}
-		
-		type ListUsersResponse {
-			users: [User!]!
-		}
-		
-		type CreateUserResponse {
-			user: User
-		}
-		
-		type User {
-			id: ID!
-			name: String!
-		}
-		`
-
-		errors := runRule(t, rule, schema)
-		ruleErrors := countRuleErrors(errors, "operation-response-name")
-
-		if ruleErrors != 3 {
 			t.Errorf("Expected 3 errors for nullable response types, got %d", ruleErrors)
 		}
 
 		// Check specific error messages for non-nullable requirement
 		expectedMessages := []string{
-			"Query `getUser` response type should be non-nullable (`GetUserResponse!` instead of `GetUserResponse`).",
-			"Query `listUsers` response type should be non-nullable (`ListUsersResponse!` instead of `ListUsersResponse`).",
-			"Mutation `createUser` response type should be non-nullable (`CreateUserResponse!` instead of `CreateUserResponse`).",
+			"Query `getUser` response type should be non-nullable (`UserResult!` instead of `UserResult`).",
+			"Query `listUsers` response type should be non-nullable (`UsersData!` instead of `UsersData`).",
+			"Mutation `createUser` response type should be non-nullable (`CreateUserResult!` instead of `CreateUserResult`).",
 		}
 
 		for _, expectedMsg := range expectedMessages {
@@ -1977,7 +1932,7 @@ func TestOperationResponseName(t *testing.T) {
 		}
 	})
 
-	t.Run("versioned response types", func(t *testing.T) {
+	t.Run("should flag versioned Response response types", func(t *testing.T) {
 		schema := `
 		type Query {
 			getUser: GetUserResponseV2!
@@ -2009,8 +1964,8 @@ func TestOperationResponseName(t *testing.T) {
 		errors := runRule(t, rule, schema)
 		ruleErrors := countRuleErrors(errors, "operation-response-name")
 
-		if ruleErrors != 0 {
-			t.Errorf("Expected no errors for versioned response types, got %d", ruleErrors)
+		if ruleErrors != 3 {
+			t.Errorf("Expected 3 errors for forbidden versioned Response suffix types, got %d", ruleErrors)
 		}
 	})
 }

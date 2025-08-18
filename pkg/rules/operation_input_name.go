@@ -23,7 +23,7 @@ func (r *InputName) Name() string {
 
 // Description returns what this rule checks
 func (r *InputName) Description() string {
-	return "Require query/mutation argument to be always called 'request' and input type to be called Query/Mutation name + 'Request[Version]' in PascalCase"
+	return "Require query/mutation argument to be always called 'request' and input type to NOT be called Query/Mutation name + 'Request[Version]' in PascalCase"
 }
 
 // Check validates that query/mutation arguments follow the standard naming pattern
@@ -82,7 +82,7 @@ func (r *InputName) checkFields(fields ast.FieldList, operationType string, sour
 				expectedInputType := r.capitalizeFirst(field.Name) + "Request"
 				actualInputType := r.getBaseTypeName(arg.Type)
 
-				if !r.isValidRequestType(actualInputType, expectedInputType) {
+				if r.isInValidRequestType(actualInputType, expectedInputType) {
 					line, column := 1, 1
 					if arg.Position != nil {
 						line = arg.Position.Line
@@ -90,7 +90,7 @@ func (r *InputName) checkFields(fields ast.FieldList, operationType string, sour
 					}
 
 					errors = append(errors, types.LintError{
-						Message: fmt.Sprintf("%s `%s` input type should be named `%s` or `%s[Version]`, not `%s`.", operationType, field.Name, expectedInputType, expectedInputType, actualInputType),
+						Message: fmt.Sprintf("%s `%s` input type should not be named `%s` or `%s[Version]`", operationType, field.Name, expectedInputType, expectedInputType),
 						Location: types.Location{
 							Line:   line,
 							Column: column,
@@ -107,9 +107,9 @@ func (r *InputName) checkFields(fields ast.FieldList, operationType string, sour
 					column = field.Position.Column
 				}
 
-				expectedInputType := r.capitalizeFirst(field.Name) + "Request"
+				//expectedInputType := r.capitalizeFirst(field.Name) + "Request"
 				errors = append(errors, types.LintError{
-					Message: fmt.Sprintf("%s `%s` has %d arguments. Consider consolidating into a single 'request' argument of type `%s`.", operationType, field.Name, len(field.Arguments), expectedInputType),
+					Message: fmt.Sprintf("%s `%s` has %d arguments. Consider consolidating into a single 'request' argument of a properly named input type (not %sRequest).", operationType, field.Name, len(field.Arguments), r.capitalizeFirst(field.Name)),
 					Location: types.Location{
 						Line:   line,
 						Column: column,
@@ -136,7 +136,7 @@ func (r *InputName) getBaseTypeName(fieldType *ast.Type) string {
 
 // isValidRequestType checks if the actual type name matches the expected pattern
 // Allows for both "Request" and "Request[Version]" patterns (e.g., "CreateUserRequest", "CreateUserRequestV2")
-func (r *InputName) isValidRequestType(actualType, expectedType string) bool {
+func (r *InputName) isInValidRequestType(actualType, expectedType string) bool {
 	// Direct match
 	if actualType == expectedType {
 		return true
