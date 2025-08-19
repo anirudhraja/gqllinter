@@ -9,7 +9,7 @@ import (
 )
 
 // FieldsNullableExceptId checks that all fields are nullable except ID fields
-type FieldsNullableExceptId struct{
+type FieldsNullableExceptId struct {
 	// excludedTypes contains object/type names that should be excluded from this rule
 	excludedTypes map[string]bool
 }
@@ -19,7 +19,7 @@ func NewFieldsNullableExceptId() *FieldsNullableExceptId {
 	excludedTypes := map[string]bool{
 		"PageInfo": true,
 	}
-	
+
 	return &FieldsNullableExceptId{
 		excludedTypes: excludedTypes,
 	}
@@ -54,7 +54,6 @@ func (r *FieldsNullableExceptId) Check(schema *ast.Schema, source *ast.Source) [
 			// Check each field in the type
 			for _, field := range def.Fields {
 				if r.shouldBeNullable(field) && r.isNonNullType(field.Type) {
-					println(field.Name)
 					line, column := 1, 1
 					if field.Position != nil {
 						line = field.Position.Line

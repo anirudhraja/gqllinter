@@ -1713,7 +1713,7 @@ func TestFieldsNullableExceptId(t *testing.T) {
 		`
 		errors := runRule(t, rule, schema)
 		if countRuleErrors(errors, "fields-nullable-except-id") != 6 {
-			t.Errorf("Expected exactly 5 errors (excluding PageInfo fields), got %d", countRuleErrors(errors, "fields-nullable-except-id"))
+			t.Errorf("Expected exactly 6 errors (excluding PageInfo fields), got %d", countRuleErrors(errors, "fields-nullable-except-id"))
 		}
 
 		// Verify PageInfo fields are not flagged
