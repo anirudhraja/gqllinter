@@ -51,6 +51,39 @@ func TestMutationLint(t *testing.T) {
 			expectedErrors: 0,
 		},
 		{
+			name: "Invalid: mutation response List of union",
+			schema: `
+				directive @responseUnion on UNION
+				directive @error on OBJECT
+
+				union MobileRiders @responseUnion = MockMobileRider | RiderNotFound
+
+				type RiderNotFound @error {
+					code: String!
+					message: String!
+				}
+
+				type MockMobileRider @key(fields: "id") {
+					id: ID!
+					user: MockUser!
+					mobile_number: String!
+					name: String!
+				}
+
+				type MockUser {
+					id: ID!
+					name: String!
+				}
+
+				type Mutation {
+					resolveMobileRiders(id: ID!): [MobileRiders!]
+				}
+
+				directive @key(fields: String!) on OBJECT
+			`,
+			expectedErrors: 2,
+		},
+		{
 			name: "Invalid: Mutation returns non-union type",
 			schema: `
 				directive @responseUnion on UNION

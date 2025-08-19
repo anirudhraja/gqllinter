@@ -57,6 +57,18 @@ func (r *MutationLint) validateMutationResponseUnions(schema *ast.Schema, source
 	// Check each mutation field
 	for _, field := range mutationType.Fields {
 		returnTypeName := field.Type.NamedType
+		if returnTypeName == "" {
+			errors = append(errors, types.LintError{
+				Message: fmt.Sprintf("Mutation field '%s' must return a union type with @responseUnion directive, but returns a list type", field.Name),
+				Location: types.Location{
+					Line:   field.Position.Line,
+					Column: field.Position.Column,
+					File:   source.Name,
+				},
+				Rule: r.Name(),
+			})
+			continue
+		}
 		returnType := schema.Types[returnTypeName]
 
 		// Check if the return type is a union with @responseUnion directive
