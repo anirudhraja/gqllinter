@@ -43,7 +43,7 @@ func TestMutationLint(t *testing.T) {
 				}
 
 				type Mutation {
-					resolveMobileRiders(id: ID!): MobileRiders
+					resolveMobileRiders(id: ID!): MobileRiders!
 				}
 
 				directive @key(fields: String!) on OBJECT
@@ -62,7 +62,7 @@ func TestMutationLint(t *testing.T) {
 				}
 
 				type Mutation {
-					resolveMobileRiders(id: ID!): MockMobileRider
+					resolveMobileRiders(id: ID!): MockMobileRider!
 				}
 			`,
 			expectedErrors: 1,
@@ -87,7 +87,7 @@ func TestMutationLint(t *testing.T) {
 				}
 
 				type Mutation {
-					resolveMobileRiders(id: ID!): MobileRiders
+					resolveMobileRiders(id: ID!): MobileRiders!
 				}
 			`,
 			expectedErrors: 1,
@@ -112,7 +112,7 @@ func TestMutationLint(t *testing.T) {
 				}
 
 				type Mutation {
-					resolveMobileRiders(id: ID!): MobileRiders
+					resolveMobileRiders(id: ID!): MobileRiders!
 				}
 			`,
 			expectedErrors: 1,
@@ -142,7 +142,7 @@ func TestMutationLint(t *testing.T) {
 				}
 
 				type Mutation {
-					resolveMobileRiders(id: ID!): MobileRiders
+					resolveMobileRiders(id: ID!): MobileRiders!
 				}
 			`,
 			expectedErrors: 1,
@@ -178,8 +178,8 @@ func TestMutationLint(t *testing.T) {
 				}
 
 				type Mutation {
-					resolveMobileRiders(id: ID!): MobileRiders
-					getUser(id: ID!): UserResult
+					resolveMobileRiders(id: ID!): MobileRiders!
+					getUser(id: ID!): UserResult!
 				}
 			`,
 			expectedErrors: 0,
@@ -207,7 +207,7 @@ func TestMutationLint(t *testing.T) {
 				}
 
 				type Mutation {
-					updateUser(id: ID!): UserResult
+					updateUser(id: ID!): UserResult!
 				}
 			`,
 			expectedErrors: 0,
@@ -280,9 +280,9 @@ func TestMutationLint(t *testing.T) {
 				}
 
 				type Mutation {
-					mutation1(id: ID!): BadUnion1
-					mutation2(id: ID!): BadUnion2
-					mutation3(id: ID!): Success1
+					mutation1(id: ID!): BadUnion1!
+					mutation2(id: ID!): BadUnion2!
+					mutation3(id: ID!): Success1!
 				}
 			`,
 			expectedErrors: 3,
@@ -306,7 +306,7 @@ func TestMutationLint(t *testing.T) {
 				}
 
 				type Mutation {
-					testMutation(id: ID!): TestUnion
+					testMutation(id: ID!): TestUnion!
 				}
 			`,
 			expectedErrors: 1,
@@ -352,8 +352,8 @@ func TestMutationLint(t *testing.T) {
 				}
 
 				type Mutation {
-					createUser(email: String!, name: String!): CreateUserResult
-					updateUser(id: ID!, name: String): UpdateUserResult
+					createUser(email: String!, name: String!): CreateUserResult!
+					updateUser(id: ID!, name: String): UpdateUserResult!
 				}
 			`,
 			expectedErrors: 0,
