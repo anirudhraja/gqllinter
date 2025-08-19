@@ -56,17 +56,26 @@ func (r *MutationLint) validateMutationResponseUnions(schema *ast.Schema, source
 
 	// Check each mutation field
 	for _, field := range mutationType.Fields {
-		returnTypeName := r.getBaseTypeName(field.Type)
+		returnTypeName := field.Type.NamedType
 		returnType := schema.Types[returnTypeName]
-
-		if returnType == nil {
-			continue // Type not found, will be caught by other validation
-		}
 
 		// Check if the return type is a union with @responseUnion directive
 		if returnType.Kind != ast.Union {
 			errors = append(errors, types.LintError{
 				Message: fmt.Sprintf("Mutation field '%s' must return a union type with @responseUnion directive, but returns '%s'", field.Name, returnTypeName),
+				Location: types.Location{
+					Line:   field.Position.Line,
+					Column: field.Position.Column,
+					File:   source.Name,
+				},
+				Rule: r.Name(),
+			})
+			continue
+		}
+		// should be non-null type
+		if !field.Type.NonNull {
+			errors = append(errors, types.LintError{
+				Message: fmt.Sprintf("Mutation field '%s' must return a non-null union type with @responseUnion directive, but returns '%s'", field.Name, returnTypeName),
 				Location: types.Location{
 					Line:   field.Position.Line,
 					Column: field.Position.Column,
@@ -201,22 +210,6 @@ func (r *MutationLint) validateUnionErrorTypes(schema *ast.Schema, source *ast.S
 	return errors
 }
 
-// Helper functions
-
-// getBaseTypeName extracts the base type name from a GraphQL type (removing NonNull and List wrappers)
-func (r *MutationLint) getBaseTypeName(fieldType *ast.Type) string {
-	if fieldType.NonNull {
-		return r.getBaseTypeName(&ast.Type{
-			NamedType: fieldType.NamedType,
-			Elem:      fieldType.Elem,
-		})
-	}
-	if fieldType.Elem != nil {
-		return r.getBaseTypeName(fieldType.Elem)
-	}
-	return fieldType.NamedType
-}
-
 // hasResponseUnionDirective checks if a type has the @responseUnion directive
 func (r *MutationLint) hasResponseUnionDirective(typeDefinition *ast.Definition) bool {
 	if typeDefinition == nil {
@@ -313,7 +306,7 @@ func (r *MutationLint) isUnionUsedInMutationOrQuery(schema *ast.Schema, unionTyp
 	mutationType := schema.Types["Mutation"]
 	if mutationType != nil {
 		for _, field := range mutationType.Fields {
-			if r.getBaseTypeName(field.Type) == unionTypeName {
+			if field.Type.NamedType == unionTypeName {
 				return true
 			}
 		}
@@ -323,7 +316,7 @@ func (r *MutationLint) isUnionUsedInMutationOrQuery(schema *ast.Schema, unionTyp
 	queryType := schema.Types["Query"]
 	if queryType != nil {
 		for _, field := range queryType.Fields {
-			if r.getBaseTypeName(field.Type) == unionTypeName {
+			if field.Type.NamedType == unionTypeName {
 				return true
 			}
 		}
