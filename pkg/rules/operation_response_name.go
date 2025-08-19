@@ -54,25 +54,25 @@ func (r *OperationResponseName) checkFields(fields ast.FieldList, operationType 
 		}
 
 		// Check if response type is non-nullable
-		if !r.isNonNullType(field.Type) {
-			line, column := 1, 1
-			if field.Position != nil {
-				line = field.Position.Line
-				column = field.Position.Column
-			}
-
-			actualType := r.typeToString(field.Type)
-
-			errors = append(errors, types.LintError{
-				Message: fmt.Sprintf("%s `%s` response type should be non-nullable (`%s!` instead of `%s`).", operationType, field.Name, r.getBaseTypeName(field.Type), actualType),
-				Location: types.Location{
-					Line:   line,
-					Column: column,
-					File:   source.Name,
-				},
-				Rule: r.Name(),
-			})
-		}
+		//if !r.isNonNullType(field.Type) {
+		//	line, column := 1, 1
+		//	if field.Position != nil {
+		//		line = field.Position.Line
+		//		column = field.Position.Column
+		//	}
+		//
+		//	actualType := r.typeToString(field.Type)
+		//
+		//	errors = append(errors, types.LintError{
+		//		Message: fmt.Sprintf("%s `%s` response type should be non-nullable (`%s!` instead of `%s`).", operationType, field.Name, r.getBaseTypeName(field.Type), actualType),
+		//		Location: types.Location{
+		//			Line:   line,
+		//			Column: column,
+		//			File:   source.Name,
+		//		},
+		//		Rule: r.Name(),
+		//	})
+		//}
 
 		// Check if the response type follows the forbidden naming convention
 		forbiddenResponseType := r.capitalizeFirst(field.Name) + "Response"

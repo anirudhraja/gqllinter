@@ -1882,56 +1882,6 @@ func TestOperationResponseName(t *testing.T) {
 		}
 	})
 
-	t.Run("should flag nullable response types", func(t *testing.T) {
-		schema := `
-		type Query {
-			getUser: UserResult
-			listUsers: UsersData
-		}
-		
-		type Mutation {
-			createUser: CreateUserResult
-		}
-		
-		type UserResult {
-			user: User
-		}
-		
-		type UsersData {
-			users: [User!]!
-		}
-		
-		type CreateUserResult {
-			user: User
-		}
-		
-		type User {
-			id: ID!
-			name: String!
-		}
-		`
-
-		errors := runRule(t, rule, schema)
-		ruleErrors := countRuleErrors(errors, "operation-response-name")
-
-		if ruleErrors != 3 {
-			t.Errorf("Expected 3 errors for nullable response types, got %d", ruleErrors)
-		}
-
-		// Check specific error messages for non-nullable requirement
-		expectedMessages := []string{
-			"Query `getUser` response type should be non-nullable (`UserResult!` instead of `UserResult`).",
-			"Query `listUsers` response type should be non-nullable (`UsersData!` instead of `UsersData`).",
-			"Mutation `createUser` response type should be non-nullable (`CreateUserResult!` instead of `CreateUserResult`).",
-		}
-
-		for _, expectedMsg := range expectedMessages {
-			if !containsError(errors, expectedMsg) {
-				t.Errorf("Expected error message: %s", expectedMsg)
-			}
-		}
-	})
-
 	t.Run("should flag versioned Response response types", func(t *testing.T) {
 		schema := `
 		type Query {
