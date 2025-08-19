@@ -9,11 +9,20 @@ import (
 )
 
 // FieldsNullableExceptId checks that all fields are nullable except ID fields
-type FieldsNullableExceptId struct{}
+type FieldsNullableExceptId struct{
+	// excludedTypes contains object/type names that should be excluded from this rule
+	excludedTypes map[string]bool
+}
 
 // NewFieldsNullableExceptId creates a new instance of the FieldsNullableExceptId rule
 func NewFieldsNullableExceptId() *FieldsNullableExceptId {
-	return &FieldsNullableExceptId{}
+	excludedTypes := map[string]bool{
+		"PageInfo": true,
+	}
+	
+	return &FieldsNullableExceptId{
+		excludedTypes: excludedTypes,
+	}
 }
 
 // Name returns the rule name
@@ -33,11 +42,12 @@ func (r *FieldsNullableExceptId) Check(schema *ast.Schema, source *ast.Source) [
 	// Check all object types
 	for _, def := range schema.Types {
 		if def.Kind == ast.Object {
-			// Skip introspection types and root types
+			// Skip introspection types, root types, and excluded types
 			if strings.HasPrefix(def.Name, "__") ||
 				def.Name == "Query" ||
 				def.Name == "Mutation" ||
-				def.Name == "Subscription" {
+				def.Name == "Subscription" ||
+				r.excludedTypes[def.Name] {
 				continue
 			}
 
@@ -98,7 +108,7 @@ func (r *FieldsNullableExceptId) getTypeName(fieldType *ast.Type) string {
 
 // isNonNullType checks if a type is non-null
 func (r *FieldsNullableExceptId) isNonNullType(fieldType *ast.Type) bool {
-	return fieldType.NonNull && fieldType.NamedType != ""
+	return fieldType.NonNull
 }
 
 // makeNullable converts a non-null type to nullable

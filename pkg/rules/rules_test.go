@@ -1611,7 +1611,7 @@ func TestFieldsNullableExceptId(t *testing.T) {
 		`
 		errors := runRule(t, rule, schema)
 		// Should flag the non-null list fields (tags, friends) but not optionalTags
-		if errors != nil || len(errors) > 0 {
+		if errors == nil || len(errors) != 2 {
 			t.Errorf("UnExpected errors got %v", errors)
 		}
 	})
@@ -1683,6 +1683,59 @@ func TestFieldsNullableExceptId(t *testing.T) {
 		// Should flag all non-ID fields (createdAt, uuid, customField)
 		if countRuleErrors(errors, "fields-nullable-except-id") != 3 {
 			t.Errorf("Expected exactly 3 errors for non-ID scalar fields, got %d", countRuleErrors(errors, "fields-nullable-except-id"))
+		}
+	})
+
+	t.Run("should skip excluded types like PageInfo", func(t *testing.T) {
+		schema := `
+		type PageInfo {
+			hasNextPage: Boolean!
+			hasPreviousPage: Boolean!
+			startCursor: String!
+			endCursor: String!
+		}
+		
+		type User {
+			id: ID!
+			name: String!
+			email: String!
+		}
+		
+		type Connection {
+			edges: [Edge!]!
+			pageInfo: PageInfo!
+		}
+		
+		type Edge {
+			node: User!
+			cursor: String!
+		}
+		`
+		errors := runRule(t, rule, schema)
+		if countRuleErrors(errors, "fields-nullable-except-id") != 6 {
+			t.Errorf("Expected exactly 5 errors (excluding PageInfo fields), got %d", countRuleErrors(errors, "fields-nullable-except-id"))
+		}
+
+		// Verify PageInfo fields are not flagged
+		for _, err := range errors {
+			if err.Rule == "fields-nullable-except-id" && strings.Contains(err.Message, "PageInfo.") {
+				t.Errorf("PageInfo fields should be excluded from the rule, but got error: %s", err.Message)
+			}
+		}
+
+		// Verify other types are still flagged (excluding list types)
+		expectedFields := []string{"User.name", "User.email", "Connection.pageInfo", "Edge.node", "Edge.cursor", "Connection.edges"}
+		for _, expectedField := range expectedFields {
+			found := false
+			for _, err := range errors {
+				if err.Rule == "fields-nullable-except-id" && strings.Contains(err.Message, expectedField) {
+					found = true
+					break
+				}
+			}
+			if !found {
+				t.Errorf("Expected error for field '%s' not found", expectedField)
+			}
 		}
 	})
 }
