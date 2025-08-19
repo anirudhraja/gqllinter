@@ -117,8 +117,8 @@ func (r *RelayEdgeTypes) validateEdgeType(edgeType *ast.Definition, schema *ast.
 		}
 
 		// Validate that node field type is valid (Scalar, Enum, Object, Interface, Union)
-		nodeTypeName := r.getBaseTypeName(nodeField.Type)
-		if nodeTypeName != "" {
+		nodeTypeName := nodeField.Type.NamedType
+		if nodeTypeName != "" { // this will be empty only for List type, which is already checked above
 			if nodeTypeDef := schema.Types[nodeTypeName]; nodeTypeDef != nil {
 				if !r.isValidNodeFieldType(nodeTypeDef.Kind) {
 					fieldLine, fieldColumn := 1, 1
@@ -249,15 +249,7 @@ func (r *RelayEdgeTypes) isListType(fieldType *ast.Type) bool {
 
 // getBaseTypeName extracts the base type name from a GraphQL type (removes NonNull and List wrappers)
 func (r *RelayEdgeTypes) getBaseTypeName(fieldType *ast.Type) string {
-	if fieldType.NamedType != "" {
-		return fieldType.NamedType
-	}
-
-	if fieldType.Elem != nil {
-		return r.getBaseTypeName(fieldType.Elem)
-	}
-
-	return ""
+	return fieldType.NamedType
 }
 
 // isValidNodeFieldType checks if a type kind is valid for a node field
@@ -284,11 +276,6 @@ func (r *RelayEdgeTypes) isValidCursorFieldType(fieldType *ast.Type, schema *ast
 				return true
 			}
 		}
-	}
-
-	// Check if it's a NonNull wrapper around a valid cursor type
-	if fieldType.NonNull && fieldType.Elem != nil {
-		return r.isValidCursorFieldType(fieldType.Elem, schema)
 	}
 
 	return false

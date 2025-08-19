@@ -2005,6 +2005,49 @@ func TestRelayEdgeTypes(t *testing.T) {
 		}
 	})
 
+	t.Run("should fail invalid Edge types", func(t *testing.T) {
+		schema := `
+		interface Node {
+            id: ID!
+        }
+        
+        type User implements Node {
+            id: ID!
+            name: String
+        }
+        
+        type UserEdge {
+            node: User
+            cursor: [String]!
+        }
+
+        type PeopleEdge { 
+            node: User
+            cursor: [String!]
+        }
+
+        type PersonEdge {
+            node: User
+            cursor: [String!]!
+        }
+        
+        type PostEdge { 
+            node: Post!
+            cursor: [String]
+        }
+        
+        type Post implements Node {
+            id: ID!
+            title: String
+        }
+		`
+		errors := runRule(t, rule, schema)
+		if countRuleErrors(errors, "relay-edge-types") != 4 {
+			t.Errorf("Expected 4 errors for invalid Edge types, got %d errors, errors: %v",
+				countRuleErrors(errors, "relay-edge-types"), errors)
+		}
+	})
+
 	t.Run("should flag Edge type that is not Object type", func(t *testing.T) {
 		schema := `
 		interface UserEdge {
