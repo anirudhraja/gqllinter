@@ -100,7 +100,7 @@ func (r *RelayPageInfo) ValidatePageInfoType(pageInfoType *ast.Definition, sourc
 		}
 
 		// Validate field type
-		actualType := r.typeToString(field.Type)
+		actualType := field.Type.String()
 		if actualType != required.expectedType {
 			line, column := 1, 1
 			if field.Position != nil {
@@ -139,26 +139,4 @@ func (r *RelayPageInfo) findField(typeDef *ast.Definition, fieldName string) *as
 		}
 	}
 	return nil
-}
-
-// typeToString converts a GraphQL type to its string representation
-func (r *RelayPageInfo) typeToString(fieldType *ast.Type) string {
-	if fieldType.NonNull {
-		if fieldType.NamedType != "" {
-			return fieldType.NamedType + "!"
-		}
-		if fieldType.Elem != nil {
-			return r.typeToString(fieldType.Elem) + "!"
-		}
-	}
-
-	if fieldType.NamedType != "" {
-		return fieldType.NamedType
-	}
-
-	if fieldType.Elem != nil {
-		return "[" + r.typeToString(fieldType.Elem) + "]"
-	}
-
-	return "Unknown"
 }
