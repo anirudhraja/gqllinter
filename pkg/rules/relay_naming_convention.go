@@ -111,14 +111,13 @@ func (r *RelayNamingConvention) validateConnectionNaming(connectionType *ast.Def
 	if edgesField != nil {
 		expectedEdgeTypeName := entityName + "Edge"
 		actualEdgeTypeName := r.getEdgeTypeFromEdgesField(edgesField.Type)
-		
 		if actualEdgeTypeName != "" && actualEdgeTypeName != expectedEdgeTypeName {
 			fieldLine, fieldColumn := line, column
 			if edgesField.Position != nil {
 				fieldLine = edgesField.Position.Line
 				fieldColumn = edgesField.Position.Column
 			}
-			
+
 			errors = append(errors, types.LintError{
 				Message: fmt.Sprintf("Connection type `%s` edges field must reference `%s`, but references `%s`.",
 					connectionType.Name, expectedEdgeTypeName, actualEdgeTypeName),
@@ -209,8 +208,6 @@ func (r *RelayNamingConvention) extractEntityFromEdge(edgeName string) string {
 	return entityName
 }
 
-
-
 // findField finds a field by name in a type definition
 func (r *RelayNamingConvention) findField(typeDef *ast.Definition, fieldName string) *ast.FieldDefinition {
 	for _, field := range typeDef.Fields {
@@ -252,4 +249,3 @@ func (r *RelayNamingConvention) getEdgeTypeFromEdgesField(fieldType *ast.Type) s
 
 	return ""
 }
-

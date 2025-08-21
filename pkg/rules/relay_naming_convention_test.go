@@ -87,17 +87,16 @@ func TestRelayNamingConvention(t *testing.T) {
 		}
 		`
 		errors := runRule(t, rule, schema)
-		
 		expectedErrors := []string{
 			"Connection type `userconnection` must follow the naming convention [Entity]Connection with proper case.",
 			"Connection type `Connection` must have a valid entity name before 'Connection'.",
 			"Connection type `user_connection` must follow the naming convention [Entity]Connection with proper case.",
 		}
-		
+
 		if countRuleErrors(errors, "relay-naming-convention") != len(expectedErrors) {
 			t.Errorf("Expected %d errors for invalid Connection naming, got %d", len(expectedErrors), countRuleErrors(errors, "relay-naming-convention"))
 		}
-		
+
 		for _, expectedMessage := range expectedErrors {
 			if !containsError(errors, expectedMessage) {
 				t.Errorf("Expected error message: %s", expectedMessage)
@@ -132,17 +131,17 @@ func TestRelayNamingConvention(t *testing.T) {
 		}
 		`
 		errors := runRule(t, rule, schema)
-		
+
 		expectedErrors := []string{
 			"Edge type `useredge` must follow the naming convention [Entity]Edge with proper case.",
 			"Edge type `Edge` must have a valid entity name before 'Edge'.",
 			"Edge type `user_edge` must follow the naming convention [Entity]Edge with proper case.",
 		}
-		
+
 		if countRuleErrors(errors, "relay-naming-convention") != len(expectedErrors) {
 			t.Errorf("Expected %d errors for invalid Edge naming, got %d", len(expectedErrors), countRuleErrors(errors, "relay-naming-convention"))
 		}
-		
+
 		for _, expectedMessage := range expectedErrors {
 			if !containsError(errors, expectedMessage) {
 				t.Errorf("Expected error message: %s", expectedMessage)
@@ -185,18 +184,18 @@ func TestRelayNamingConvention(t *testing.T) {
 		}
 		`
 		errors := runRule(t, rule, schema)
-		
+
 		expectedErrors := []string{
 			"Connection type `myEntityConnection` entity name `myEntity` must be PascalCase.",
 			"Edge type `myEntityEdge` entity name `myEntity` must be PascalCase.",
 			"Connection type `user123Connection` entity name `user123` must be PascalCase.",
 			"Edge type `user123Edge` entity name `user123` must be PascalCase.",
 		}
-		
+
 		if countRuleErrors(errors, "relay-naming-convention") != len(expectedErrors) {
 			t.Errorf("Expected %d errors for non-PascalCase entity names, got %d", len(expectedErrors), countRuleErrors(errors, "relay-naming-convention"))
 		}
-		
+
 		for _, expectedMessage := range expectedErrors {
 			if !containsError(errors, expectedMessage) {
 				t.Errorf("Expected error message: %s", expectedMessage)
@@ -363,18 +362,18 @@ func TestRelayNamingConvention(t *testing.T) {
 		}
 		`
 		errors := runRule(t, rule, schema)
-		
+
 		expectedErrors := []string{
 			"Connection type `UserConnection` edges field must reference `UserEdge`, but references `SomeEdge`.",
 			"Connection type `OrderConnection` edges field must reference `OrderEdge`, but references `ProductEdge`.",
 		}
-		
+
 		for _, expectedMessage := range expectedErrors {
 			if !containsError(errors, expectedMessage) {
 				t.Errorf("Expected error message: %s", expectedMessage)
 			}
 		}
-		
+
 		// PostConnection should not be flagged since it correctly references PostEdge
 		unexpectedMessage := "Connection type `PostConnection` edges field must reference `PostEdge`, but references"
 		if containsError(errors, unexpectedMessage) {
@@ -431,7 +430,7 @@ func TestRelayNamingConvention(t *testing.T) {
 		}
 		`
 		errors := runRule(t, rule, schema)
-		
+
 		// Should have no errors since all edges fields correctly reference matching Edge types
 		if countRuleErrors(errors, "relay-naming-convention") > 0 {
 			t.Errorf("Expected no errors for correctly matched edges fields, got %d", countRuleErrors(errors, "relay-naming-convention"))
@@ -459,7 +458,7 @@ func TestRelayNamingConvention(t *testing.T) {
 		}
 		`
 		errors := runRule(t, rule, schema)
-		
+
 		// Should only flag naming issues, not missing edges field (that's handled by other rules)
 		if countRuleErrors(errors, "relay-naming-convention") > 0 {
 			for _, err := range errors {
