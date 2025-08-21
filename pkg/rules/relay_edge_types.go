@@ -30,8 +30,11 @@ func (r *RelayEdgeTypes) Description() string {
 func (r *RelayEdgeTypes) Check(schema *ast.Schema, source *ast.Source) []types.LintError {
 	var errors []types.LintError
 
-	// First, find all Connection types and collect Edge types referenced by them
+	// Collect Edge types from two sources:
+	// 1. Types referenced by Connection types' edges fields
+	// 2. Types that end with "Edge" by name convention
 	edgeTypes := make(map[string]bool)
+	edgeTypesFromConnections := make(map[string]bool) // Track which were found from connections
 
 	// Check all types in the schema
 	for _, def := range schema.Types {
@@ -39,17 +42,31 @@ func (r *RelayEdgeTypes) Check(schema *ast.Schema, source *ast.Source) []types.L
 		if def.BuiltIn || strings.HasPrefix(def.Name, "__") {
 			continue
 		}
+		lowerCaseDefName := strings.ToLower(def.Name)
+		// Check if this is a Connection type and extract referenced Edge types
+		if strings.HasSuffix(lowerCaseDefName, "connection") && def.Kind == ast.Object {
+			edgesField := r.findField(def, "edges")
+			if edgesField != nil {
+				edgeTypeName := r.getEdgeTypeFromEdgesField(edgesField.Type)
+				if edgeTypeName != "" {
+					edgeTypes[edgeTypeName] = true
+					edgeTypesFromConnections[edgeTypeName] = true
+				}
+			}
+		}
 
 		// Also check types that end with "Edge" by name convention
-		if strings.HasSuffix(def.Name, "Edge") {
-			edgeTypes[def.Name] = true
-		}
+		//TODO: Do we need to check these?
+		//if strings.HasSuffix(def.Name, "Edge") {
+		//	edgeTypes[def.Name] = true
+		//}
 	}
 
 	// Validate each identified Edge type
 	for edgeTypeName := range edgeTypes {
 		if edgeTypeDef := schema.Types[edgeTypeName]; edgeTypeDef != nil {
-			errors = append(errors, r.validateEdgeType(edgeTypeDef, schema, source)...)
+			isFromConnection := edgeTypesFromConnections[edgeTypeName]
+			errors = append(errors, r.validateEdgeType(edgeTypeDef, schema, source, isFromConnection)...)
 		}
 	}
 
@@ -57,7 +74,7 @@ func (r *RelayEdgeTypes) Check(schema *ast.Schema, source *ast.Source) []types.L
 }
 
 // validateEdgeType validates that an Edge type meets Relay specifications
-func (r *RelayEdgeTypes) validateEdgeType(edgeType *ast.Definition, schema *ast.Schema, source *ast.Source) []types.LintError {
+func (r *RelayEdgeTypes) validateEdgeType(edgeType *ast.Definition, schema *ast.Schema, source *ast.Source, isFromConnection bool) []types.LintError {
 	var errors []types.LintError
 
 	line, column := 1, 1
@@ -78,7 +95,6 @@ func (r *RelayEdgeTypes) validateEdgeType(edgeType *ast.Definition, schema *ast.
 			},
 			Rule: r.Name(),
 		})
-		// If it's not an Object type, we can't check fields
 		return errors
 	}
 
@@ -106,7 +122,7 @@ func (r *RelayEdgeTypes) validateEdgeType(edgeType *ast.Definition, schema *ast.
 
 			errors = append(errors, types.LintError{
 				Message: fmt.Sprintf("Edge type `%s` field `node` cannot return a list type, but returns %s.",
-					edgeType.Name, r.typeToString(nodeField.Type)),
+					edgeType.Name, nodeField.Type.String()),
 				Location: types.Location{
 					Line:   fieldLine,
 					Column: fieldColumn,
@@ -156,8 +172,8 @@ func (r *RelayEdgeTypes) validateEdgeType(edgeType *ast.Definition, schema *ast.
 			Rule: r.Name(),
 		})
 	} else {
-		// Validate that cursor field returns appropriate type (String, Scalar, or non-null wrapper)
-		if !r.isValidCursorFieldType(cursorField.Type, schema) {
+		// Validate that cursor field returns appropriate type (String, or non-null String wrapper)
+		if cursorField.Type.NamedType != "String" {
 			fieldLine, fieldColumn := 1, 1
 			if cursorField.Position != nil {
 				fieldLine = cursorField.Position.Line
@@ -165,8 +181,8 @@ func (r *RelayEdgeTypes) validateEdgeType(edgeType *ast.Definition, schema *ast.
 			}
 
 			errors = append(errors, types.LintError{
-				Message: fmt.Sprintf("Edge type `%s` field `cursor` must return String, Scalar, or a non-null wrapper around one of those types, but returns %s.",
-					edgeType.Name, r.typeToString(cursorField.Type)),
+				Message: fmt.Sprintf("Edge type `%s` field `cursor` must return String, or a non-null wrapper around a String, but returns %s.",
+					edgeType.Name, cursorField.Type.String()),
 				Location: types.Location{
 					Line:   fieldLine,
 					Column: fieldColumn,
@@ -178,7 +194,8 @@ func (r *RelayEdgeTypes) validateEdgeType(edgeType *ast.Definition, schema *ast.
 	}
 
 	// Rule 4: Edge type name must end in "Edge"
-	if !strings.HasSuffix(edgeType.Name, "Edge") {
+	// Only enforce this rule for types that were detected by name convention, not from Connection edges
+	if !isFromConnection && !strings.HasSuffix(edgeType.Name, "Edge") {
 		errors = append(errors, types.LintError{
 			Message: fmt.Sprintf("Edge type `%s` name must end with 'Edge'.", edgeType.Name),
 			Location: types.Location{
@@ -214,6 +231,10 @@ func (r *RelayEdgeTypes) validateEdgeType(edgeType *ast.Definition, schema *ast.
 							Rule: r.Name(),
 						})
 					}
+				} else if nodeTypeDef.Kind == ast.Union {
+					// For union types, check if all union members implement Node interface
+					unionErrors := r.validateUnionMembersImplementNode(nodeTypeDef, edgeType.Name, nodeField, schema, source)
+					errors = append(errors, unionErrors...)
 				}
 			}
 		}
@@ -270,30 +291,6 @@ func (r *RelayEdgeTypes) isValidNodeFieldType(kind ast.DefinitionKind) bool {
 	}
 }
 
-// isValidCursorFieldType checks if a type is a valid cursor field type (String, Scalar, or non-null wrapper)
-func (r *RelayEdgeTypes) isValidCursorFieldType(fieldType *ast.Type, schema *ast.Schema) bool {
-	// Check if it's directly a String type
-	if fieldType.NamedType == "String" {
-		return true
-	}
-
-	// Check if it's a Scalar type
-	if fieldType.NamedType != "" {
-		if scalarTypeDef := schema.Types[fieldType.NamedType]; scalarTypeDef != nil {
-			if scalarTypeDef.Kind == ast.Scalar {
-				return true
-			}
-		}
-	}
-
-	// Check if it's a NonNull wrapper around a valid cursor type
-	if fieldType.NonNull && fieldType.Elem != nil {
-		return r.isValidCursorFieldType(fieldType.Elem, schema)
-	}
-
-	return false
-}
-
 // implementsNodeInterface checks if a type implements the Node interface
 func (r *RelayEdgeTypes) implementsNodeInterface(typeDef *ast.Definition, schema *ast.Schema) bool {
 	// Check if Node interface exists in schema
@@ -326,25 +323,74 @@ func (r *RelayEdgeTypes) implementsNodeInterface(typeDef *ast.Definition, schema
 	return true // Other types don't need to implement Node
 }
 
-// typeToString converts a GraphQL type to its string representation
-func (r *RelayEdgeTypes) typeToString(fieldType *ast.Type) string {
-	// Handle the base case - named type
-	if fieldType.NamedType != "" {
-		if fieldType.NonNull {
-			return fieldType.NamedType + "!"
+// validateUnionMembersImplementNode checks if all union members implement Node interface
+func (r *RelayEdgeTypes) validateUnionMembersImplementNode(unionDef *ast.Definition, edgeTypeName string, nodeField *ast.FieldDefinition, schema *ast.Schema, source *ast.Source) []types.LintError {
+	var errors []types.LintError
+
+	// Check if Node interface exists in schema
+	nodeInterface := schema.Types["Node"]
+	if nodeInterface == nil || nodeInterface.Kind != ast.Interface {
+		// If Node interface doesn't exist, we can't enforce this rule
+		return errors
+	}
+
+	fieldLine, fieldColumn := 1, 1
+	if nodeField.Position != nil {
+		fieldLine = nodeField.Position.Line
+		fieldColumn = nodeField.Position.Column
+	}
+
+	// Check each union member
+	for _, memberName := range unionDef.Types {
+		if memberDef := schema.Types[memberName]; memberDef != nil {
+			if memberDef.Kind == ast.Object || memberDef.Kind == ast.Interface {
+				if !r.implementsNodeInterface(memberDef, schema) {
+					errors = append(errors, types.LintError{
+						Message: fmt.Sprintf("Edge type `%s` field `node` union type `%s` member `%s` must implement Node interface.",
+							edgeTypeName, unionDef.Name, memberName),
+						Location: types.Location{
+							Line:   fieldLine,
+							Column: fieldColumn,
+							File:   source.Name,
+						},
+						Rule: r.Name(),
+					})
+				}
+			}
 		}
+	}
+
+	return errors
+}
+
+// getEdgeTypeFromEdgesField extracts the Edge type name from an edges field type
+// Handles cases like [UserEdge], [UserEdge!], [UserEdge]!, [UserEdge!]!
+func (r *RelayEdgeTypes) getEdgeTypeFromEdgesField(fieldType *ast.Type) string {
+	// If it's a NonNull wrapper, look at the inner type
+	if fieldType.NonNull && fieldType.Elem != nil {
+		return r.getEdgeTypeFromEdgesField(fieldType.Elem)
+	}
+
+	// If it's a list type, get the element type
+	if fieldType.Elem != nil && fieldType.NamedType == "" {
+		// This is a list, get the element type
+		elementType := fieldType.Elem
+
+		// Handle NonNull element (e.g., [UserEdge!])
+		if elementType.NonNull && elementType.Elem != nil {
+			return r.getEdgeTypeFromEdgesField(elementType.Elem)
+		}
+
+		// Handle regular element (e.g., [UserEdge])
+		if elementType.NamedType != "" {
+			return elementType.NamedType
+		}
+	}
+
+	// Direct named type (shouldn't happen for edges field but handle it)
+	if fieldType.NamedType != "" {
 		return fieldType.NamedType
 	}
 
-	// Handle list types
-	if fieldType.Elem != nil {
-		innerType := r.typeToString(fieldType.Elem)
-		listType := "[" + innerType + "]"
-		if fieldType.NonNull {
-			return listType + "!"
-		}
-		return listType
-	}
-
-	return "Unknown"
+	return ""
 }

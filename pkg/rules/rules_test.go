@@ -1976,7 +1976,7 @@ func TestOperationResponseName(t *testing.T) {
 func TestRelayEdgeTypes(t *testing.T) {
 	rule := NewRelayEdgeTypes()
 
-	t.Run("should pass valid Edge types", func(t *testing.T) {
+	t.Run("should pass valid Edge types referenced by Connection types", func(t *testing.T) {
 		schema := `
 		interface Node {
 			id: ID!
@@ -2001,6 +2001,21 @@ func TestRelayEdgeTypes(t *testing.T) {
 			id: ID!
 			title: String
 		}
+		
+		type UserConnection {
+			edges: [UserEdge]
+			pageInfo: PageInfo!
+		}
+		
+		type PostConnection {
+			edges: [PostEdge!]!
+			pageInfo: PageInfo!
+		}
+		
+		type PageInfo {
+			hasNextPage: Boolean!
+			hasPreviousPage: Boolean!
+		}
 		`
 		errors := runRule(t, rule, schema)
 		if countRuleErrors(errors, "relay-edge-types") > 0 {
@@ -2017,6 +2032,16 @@ func TestRelayEdgeTypes(t *testing.T) {
 		
 		type User {
 			id: ID!
+		}
+		
+		type UserConnection {
+			edges: [UserEdge]
+			pageInfo: PageInfo!
+		}
+		
+		type PageInfo {
+			hasNextPage: Boolean!
+			hasPreviousPage: Boolean!
 		}
 		`
 		errors := runRule(t, rule, schema)
@@ -2040,6 +2065,16 @@ func TestRelayEdgeTypes(t *testing.T) {
 		type User {
 			id: ID!
 		}
+		
+		type UserConnection {
+			edges: [UserEdge]
+			pageInfo: PageInfo!
+		}
+		
+		type PageInfo {
+			hasNextPage: Boolean!
+			hasPreviousPage: Boolean!
+		}
 		`
 		errors := runRule(t, rule, schema)
 		if countRuleErrors(errors, "relay-edge-types") != 1 {
@@ -2062,6 +2097,16 @@ func TestRelayEdgeTypes(t *testing.T) {
 		type User {
 			id: ID!
 		}
+		
+		type UserConnection {
+			edges: [UserEdge]
+			pageInfo: PageInfo!
+		}
+		
+		type PageInfo {
+			hasNextPage: Boolean!
+			hasPreviousPage: Boolean!
+		}
 		`
 		errors := runRule(t, rule, schema)
 		if countRuleErrors(errors, "relay-edge-types") != 1 {
@@ -2083,6 +2128,16 @@ func TestRelayEdgeTypes(t *testing.T) {
 		
 		type User {
 			id: ID!
+		}
+		
+		type UserConnection {
+			edges: [UserEdge]
+			pageInfo: PageInfo!
+		}
+		
+		type PageInfo {
+			hasNextPage: Boolean!
+			hasPreviousPage: Boolean!
 		}
 		`
 		errors := runRule(t, rule, schema)
@@ -2118,9 +2173,9 @@ func TestRelayEdgeTypes(t *testing.T) {
 	//	}
 	//})
 
-	t.Run("should flag Edge type name not ending with Edge", func(t *testing.T) {
+	t.Run("should ignore types not referenced by Connection edges field", func(t *testing.T) {
 		schema := `
-		type UserConnection {
+		type UserDetail {
 			node: User!
 			cursor: String!
 		}
@@ -2130,10 +2185,10 @@ func TestRelayEdgeTypes(t *testing.T) {
 		}
 		`
 		errors := runRule(t, rule, schema)
-		// This should NOT be flagged because it doesn't end with "Edge"
+		// This should NOT be flagged because it's not referenced by any Connection type
 		// so it won't be detected as an Edge type
 		if countRuleErrors(errors, "relay-edge-types") > 0 {
-			t.Errorf("Expected no errors for type not ending with Edge, got %d", countRuleErrors(errors, "relay-edge-types"))
+			t.Errorf("Expected no errors for type not referenced by Connection, got %d", countRuleErrors(errors, "relay-edge-types"))
 		}
 	})
 
@@ -2151,6 +2206,16 @@ func TestRelayEdgeTypes(t *testing.T) {
 		type UserEdge {
 			node: User!
 			cursor: String!
+		}
+		
+		type UserConnection {
+			edges: [UserEdge]
+			pageInfo: PageInfo!
+		}
+		
+		type PageInfo {
+			hasNextPage: Boolean!
+			hasPreviousPage: Boolean!
 		}
 		`
 		errors := runRule(t, rule, schema)
@@ -2175,35 +2240,21 @@ func TestRelayEdgeTypes(t *testing.T) {
 			node: User!
 			cursor: String!
 		}
+		
+		type UserConnection {
+			edges: [UserEdge]
+			pageInfo: PageInfo!
+		}
+		
+		type PageInfo {
+			hasNextPage: Boolean!
+			hasPreviousPage: Boolean!
+		}
 		`
 		errors := runRule(t, rule, schema)
 		// Should pass because if Node interface doesn't exist, we can't enforce this rule
 		if countRuleErrors(errors, "relay-edge-types") > 0 {
 			t.Errorf("Expected no errors when Node interface doesn't exist, got %d", countRuleErrors(errors, "relay-edge-types"))
-		}
-	})
-
-	t.Run("should handle custom scalar types for cursor", func(t *testing.T) {
-		schema := `
-		scalar Cursor
-		
-		interface Node {
-			id: ID!
-		}
-		
-		type User implements Node {
-			id: ID!
-			name: String
-		}
-		
-		type UserEdge {
-			node: User!
-			cursor: Cursor!
-		}
-		`
-		errors := runRule(t, rule, schema)
-		if countRuleErrors(errors, "relay-edge-types") > 0 {
-			t.Errorf("Expected no errors for custom scalar cursor type, got %d", countRuleErrors(errors, "relay-edge-types"))
 		}
 	})
 
@@ -2221,6 +2272,16 @@ func TestRelayEdgeTypes(t *testing.T) {
 		type UserEdge {
 			node: User!
 			cursor: String
+		}
+		
+		type UserConnection {
+			edges: [UserEdge]
+			pageInfo: PageInfo!
+		}
+		
+		type PageInfo {
+			hasNextPage: Boolean!
+			hasPreviousPage: Boolean!
 		}
 		`
 		errors := runRule(t, rule, schema)
@@ -2243,6 +2304,16 @@ func TestRelayEdgeTypes(t *testing.T) {
 		type ContentEdge {
 			node: ContentNode!
 			cursor: String!
+		}
+		
+		type ContentConnection {
+			edges: [ContentEdge]
+			pageInfo: PageInfo!
+		}
+		
+		type PageInfo {
+			hasNextPage: Boolean!
+			hasPreviousPage: Boolean!
 		}
 		`
 		errors := runRule(t, rule, schema)
@@ -2273,6 +2344,16 @@ func TestRelayEdgeTypes(t *testing.T) {
 			node: Content!
 			cursor: String!
 		}
+		
+		type ContentConnection {
+			edges: [ContentEdge]
+			pageInfo: PageInfo!
+		}
+		
+		type PageInfo {
+			hasNextPage: Boolean!
+			hasPreviousPage: Boolean!
+		}
 		`
 		errors := runRule(t, rule, schema)
 		// Union types don't implement interfaces, so this should pass
@@ -2293,6 +2374,16 @@ func TestRelayEdgeTypes(t *testing.T) {
 			node: Status!
 			cursor: String!
 		}
+		
+		type StatusConnection {
+			edges: [StatusEdge]
+			pageInfo: PageInfo!
+		}
+		
+		type PageInfo {
+			hasNextPage: Boolean!
+			hasPreviousPage: Boolean!
+		}
 		`
 		errors := runRule(t, rule, schema)
 		// Enum types don't implement interfaces, so this should pass
@@ -2308,6 +2399,16 @@ func TestRelayEdgeTypes(t *testing.T) {
 		type TimeEdge {
 			node: DateTime!
 			cursor: String!
+		}
+		
+		type TimeConnection {
+			edges: [TimeEdge]
+			pageInfo: PageInfo!
+		}
+		
+		type PageInfo {
+			hasNextPage: Boolean!
+			hasPreviousPage: Boolean!
 		}
 		`
 		errors := runRule(t, rule, schema)
@@ -2331,6 +2432,16 @@ func TestRelayEdgeTypes(t *testing.T) {
 		type UserEdge {
 			data: [User!]!
 			id: Int!
+		}
+		
+		type UserConnection {
+			edges: [UserEdge]
+			pageInfo: PageInfo!
+		}
+		
+		type PageInfo {
+			hasNextPage: Boolean!
+			hasPreviousPage: Boolean!
 		}
 		`
 		errors := runRule(t, rule, schema)
@@ -2357,6 +2468,16 @@ func TestRelayEdgeTypes(t *testing.T) {
 			metadata: String
 			createdAt: String
 		}
+		
+		type UserConnection {
+			edges: [UserEdge]
+			pageInfo: PageInfo!
+		}
+		
+		type PageInfo {
+			hasNextPage: Boolean!
+			hasPreviousPage: Boolean!
+		}
 		`
 		errors := runRule(t, rule, schema)
 		// Should pass even with additional fields
@@ -2365,7 +2486,7 @@ func TestRelayEdgeTypes(t *testing.T) {
 		}
 	})
 
-	t.Run("should handle schema without any Edge types", func(t *testing.T) {
+	t.Run("should handle schema without any Connection types", func(t *testing.T) {
 		schema := `
 		type User {
 			id: ID!
@@ -2376,10 +2497,132 @@ func TestRelayEdgeTypes(t *testing.T) {
 			id: ID!
 			title: String
 		}
+		
+		type UserEdge {
+			node: User!
+			cursor: String!
+		}
 		`
 		errors := runRule(t, rule, schema)
 		if countRuleErrors(errors, "relay-edge-types") > 0 {
-			t.Errorf("Expected no errors for schema without Edge types, got %d", countRuleErrors(errors, "relay-edge-types"))
+			t.Errorf("Expected no errors for schema without Connection types, got %d", countRuleErrors(errors, "relay-edge-types"))
+		}
+	})
+
+	t.Run("should detect Edge types from Connection edges field", func(t *testing.T) {
+		schema := `
+		interface Node {
+			id: ID!
+		}
+		
+		type User implements Node {
+			id: ID!
+			name: String
+		}
+		
+		type UserDetail {
+			node: User!
+			cursor: String!
+		}
+		
+		type UserConnection {
+			edges: [UserDetail]
+			pageInfo: PageInfo!
+		}
+		
+		type PageInfo {
+			hasNextPage: Boolean!
+			hasPreviousPage: Boolean!
+		}
+		`
+		errors := runRule(t, rule, schema)
+		// UserDetail should be detected as Edge type from UserConnection.edges
+		// and should pass all Edge type validations
+		if countRuleErrors(errors, "relay-edge-types") > 0 {
+			t.Errorf("Expected no errors for Edge type detected from Connection, got %d", countRuleErrors(errors, "relay-edge-types"))
+		}
+	})
+
+	t.Run("should flag Edge type detected from Connection with violations", func(t *testing.T) {
+		schema := `
+		interface Node {
+			id: ID!
+		}
+		
+		type User {
+			id: ID!
+			name: String
+		}
+		
+		type UserDetail {
+			node: User!
+			cursor: String!
+		}
+		
+		type UserConnection {
+			edges: [UserDetail]
+			pageInfo: PageInfo!
+		}
+		
+		type PageInfo {
+			hasNextPage: Boolean!
+			hasPreviousPage: Boolean!
+		}
+		`
+		errors := runRule(t, rule, schema)
+		// UserDetail should be detected as Edge type and flagged for User not implementing Node
+		if countRuleErrors(errors, "relay-edge-types") != 1 {
+			t.Errorf("Expected exactly 1 error for Edge type detected from Connection with violations, got %d", countRuleErrors(errors, "relay-edge-types"))
+		}
+
+		expectedMessage := "Edge type `UserDetail` field `node` type `User` must implement Node interface."
+		if !containsError(errors, expectedMessage) {
+			t.Errorf("Expected error message: %s", expectedMessage)
+		}
+	})
+
+	t.Run("should flag union node type members not implementing Node", func(t *testing.T) {
+		schema := `
+		interface Node {
+			id: ID!
+		}
+		
+		type User implements Node {
+			id: ID!
+			name: String
+		}
+		
+		type Post {
+			id: ID!
+			title: String
+		}
+		
+		union Content = User | Post
+		
+		type ContentEdge {
+			node: Content!
+			cursor: String!
+		}
+		
+		type ContentConnection {
+			edges: [ContentEdge]
+			pageInfo: PageInfo!
+		}
+		
+		type PageInfo {
+			hasNextPage: Boolean!
+			hasPreviousPage: Boolean!
+		}
+		`
+		errors := runRule(t, rule, schema)
+		// Should flag Post for not implementing Node interface
+		if countRuleErrors(errors, "relay-edge-types") != 1 {
+			t.Errorf("Expected exactly 1 error for union member not implementing Node, got %d", countRuleErrors(errors, "relay-edge-types"))
+		}
+
+		expectedMessage := "Edge type `ContentEdge` field `node` union type `Content` member `Post` must implement Node interface."
+		if !containsError(errors, expectedMessage) {
+			t.Errorf("Expected error message: %s", expectedMessage)
 		}
 	})
 }
@@ -2809,6 +3052,76 @@ func TestRelayConnectionTypes(t *testing.T) {
 		errors := runRule(t, rule, schema)
 		if countRuleErrors(errors, "relay-connection-types") > 0 {
 			t.Errorf("Expected no errors for different list type variations, got %d", countRuleErrors(errors, "relay-connection-types"))
+		}
+	})
+
+	t.Run("should flag Connection type with nested list edges field", func(t *testing.T) {
+		schema := `
+		type UserConnection {
+			edges: [[UserEdge]]
+			pageInfo: PageInfo!
+		}
+		
+		type UserEdge {
+			node: User
+			cursor: String!
+		}
+		
+		type User {
+			id: ID!
+			name: String
+		}
+		
+		type PageInfo {
+			hasNextPage: Boolean!
+			hasPreviousPage: Boolean!
+			startCursor: String
+			endCursor: String
+		}
+		`
+		errors := runRule(t, rule, schema)
+		if countRuleErrors(errors, "relay-connection-types") != 1 {
+			t.Errorf("Expected exactly 1 error for nested list edges field, got %d", countRuleErrors(errors, "relay-connection-types"))
+		}
+
+		expectedMessage := "Connection type `UserConnection` field `edges` must return a single-level list type, but returns a nested list [[UserEdge]]."
+		if !containsError(errors, expectedMessage) {
+			t.Errorf("Expected error message: %s", expectedMessage)
+		}
+	})
+
+	t.Run("should flag Connection type with nested non-null list edges field", func(t *testing.T) {
+		schema := `
+		type UserConnection {
+			edges: [[UserEdge!]!]!
+			pageInfo: PageInfo!
+		}
+		
+		type UserEdge {
+			node: User
+			cursor: String!
+		}
+		
+		type User {
+			id: ID!
+			name: String
+		}
+		
+		type PageInfo {
+			hasNextPage: Boolean!
+			hasPreviousPage: Boolean!
+			startCursor: String
+			endCursor: String
+		}
+		`
+		errors := runRule(t, rule, schema)
+		if countRuleErrors(errors, "relay-connection-types") != 1 {
+			t.Errorf("Expected exactly 1 error for nested non-null list edges field, got %d", countRuleErrors(errors, "relay-connection-types"))
+		}
+
+		expectedMessage := "Connection type `UserConnection` field `edges` must return a single-level list type, but returns a nested list [[UserEdge!]!]!."
+		if !containsError(errors, expectedMessage) {
+			t.Errorf("Expected error message: %s", expectedMessage)
 		}
 	})
 }
