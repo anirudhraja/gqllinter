@@ -291,30 +291,6 @@ func (r *RelayEdgeTypes) isValidNodeFieldType(kind ast.DefinitionKind) bool {
 	}
 }
 
-// isValidCursorFieldType checks if a type is a valid cursor field type (String, Scalar, or non-null wrapper)
-func (r *RelayEdgeTypes) isValidCursorFieldType(fieldType *ast.Type, schema *ast.Schema) bool {
-	// Check if it's directly a String type
-	if fieldType.NamedType == "String" {
-		return true
-	}
-
-	// Check if it's a Scalar type
-	if fieldType.NamedType != "" {
-		if scalarTypeDef := schema.Types[fieldType.NamedType]; scalarTypeDef != nil {
-			if scalarTypeDef.Kind == ast.Scalar {
-				return true
-			}
-		}
-	}
-
-	// Check if it's a NonNull wrapper around a valid cursor type
-	if fieldType.NonNull && fieldType.Elem != nil {
-		return r.isValidCursorFieldType(fieldType.Elem, schema)
-	}
-
-	return false
-}
-
 // implementsNodeInterface checks if a type implements the Node interface
 func (r *RelayEdgeTypes) implementsNodeInterface(typeDef *ast.Definition, schema *ast.Schema) bool {
 	// Check if Node interface exists in schema
