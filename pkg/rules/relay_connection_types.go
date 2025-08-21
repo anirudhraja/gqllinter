@@ -69,7 +69,6 @@ func (r *RelayConnectionTypes) validateConnectionType(connectionType *ast.Defini
 			},
 			Rule: r.Name(),
 		})
-		// If it's not an Object type, we can't check fields
 		return errors
 	}
 
@@ -88,17 +87,28 @@ func (r *RelayConnectionTypes) validateConnectionType(connectionType *ast.Defini
 		})
 	} else {
 		// TODO: Do we need to add a check that edges object name is <prefix>Edge?
-		// Validate that edges field returns a list type
-		if !r.isListType(edgesField.Type) {
-			fieldLine, fieldColumn := 1, 1
-			if edgesField.Position != nil {
-				fieldLine = edgesField.Position.Line
-				fieldColumn = edgesField.Position.Column
-			}
+		// Validate that edges field returns a single-level list type
+		fieldLine, fieldColumn := 1, 1
+		if edgesField.Position != nil {
+			fieldLine = edgesField.Position.Line
+			fieldColumn = edgesField.Position.Column
+		}
 
+		if !isListType(edgesField.Type) {
 			errors = append(errors, types.LintError{
 				Message: fmt.Sprintf("Connection type `%s` field `edges` must return a list type, but returns %s.",
-					connectionType.Name, edgesField.Type.String()),
+					connectionType.Name, r.typeToString(edgesField.Type)),
+				Location: types.Location{
+					Line:   fieldLine,
+					Column: fieldColumn,
+					File:   source.Name,
+				},
+				Rule: r.Name(),
+			})
+		} else if isNestedListType(edgesField.Type) {
+			errors = append(errors, types.LintError{
+				Message: fmt.Sprintf("Connection type `%s` field `edges` must return a single-level list type, but returns a nested list %s.",
+					connectionType.Name, r.typeToString(edgesField.Type)),
 				Location: types.Location{
 					Line:   fieldLine,
 					Column: fieldColumn,
@@ -143,17 +153,25 @@ func (r *RelayConnectionTypes) findField(typeDef *ast.Definition, fieldName stri
 	return nil
 }
 
-// isListType checks if a type is a list type (with or without NonNull wrapper)
-func (r *RelayConnectionTypes) isListType(fieldType *ast.Type) bool {
-	// Check if it's directly a list
-	if fieldType.Elem != nil && fieldType.NamedType == "" {
-		return true
+// typeToString converts a GraphQL type to its string representation
+func (r *RelayConnectionTypes) typeToString(fieldType *ast.Type) string {
+	// Handle the base case - named type
+	if fieldType.NamedType != "" {
+		if fieldType.NonNull {
+			return fieldType.NamedType + "!"
+		}
+		return fieldType.NamedType
 	}
 
-	// Check if it's a NonNull wrapper around a list
-	if fieldType.NonNull && fieldType.Elem != nil {
-		return r.isListType(fieldType.Elem)
+	// Handle list types
+	if fieldType.Elem != nil {
+		innerType := r.typeToString(fieldType.Elem)
+		listType := "[" + innerType + "]"
+		if fieldType.NonNull {
+			return listType + "!"
+		}
+		return listType
 	}
 
-	return false
+	return "Unknown"
 }
