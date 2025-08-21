@@ -197,11 +197,10 @@ func TestRelayArguments(t *testing.T) {
 		`
 		errors := runRule(t, rule, schema)
 		expectedMessage := "Field `Query.users` returns Connection type but lacks proper pagination arguments. Must include forward pagination arguments (first and after), backward pagination arguments (last and before), or both."
-		
 		if countRuleErrors(errors, "relay-arguments") != 1 {
 			t.Errorf("Expected exactly 1 error for missing pagination arguments, got %d", countRuleErrors(errors, "relay-arguments"))
 		}
-		
+
 		if !containsError(errors, expectedMessage) {
 			t.Errorf("Expected error message: %s", expectedMessage)
 		}
@@ -235,11 +234,11 @@ func TestRelayArguments(t *testing.T) {
 		`
 		errors := runRule(t, rule, schema)
 		expectedMessage := "Field `Query.users` has `first` argument but is missing `after` argument for complete forward pagination."
-		
+
 		if countRuleErrors(errors, "relay-arguments") != 1 {
 			t.Errorf("Expected exactly 1 error for incomplete forward pagination, got %d", countRuleErrors(errors, "relay-arguments"))
 		}
-		
+
 		if !containsError(errors, expectedMessage) {
 			t.Errorf("Expected error message: %s", expectedMessage)
 		}
@@ -273,11 +272,11 @@ func TestRelayArguments(t *testing.T) {
 		`
 		errors := runRule(t, rule, schema)
 		expectedMessage := "Field `Query.users` has `after` argument but is missing `first` argument for complete forward pagination."
-		
+
 		if countRuleErrors(errors, "relay-arguments") != 1 {
 			t.Errorf("Expected exactly 1 error for incomplete forward pagination, got %d", countRuleErrors(errors, "relay-arguments"))
 		}
-		
+
 		if !containsError(errors, expectedMessage) {
 			t.Errorf("Expected error message: %s", expectedMessage)
 		}
@@ -311,11 +310,11 @@ func TestRelayArguments(t *testing.T) {
 		`
 		errors := runRule(t, rule, schema)
 		expectedMessage := "Field `Query.users` has `last` argument but is missing `before` argument for complete backward pagination."
-		
+
 		if countRuleErrors(errors, "relay-arguments") != 1 {
 			t.Errorf("Expected exactly 1 error for incomplete backward pagination, got %d", countRuleErrors(errors, "relay-arguments"))
 		}
-		
+
 		if !containsError(errors, expectedMessage) {
 			t.Errorf("Expected error message: %s", expectedMessage)
 		}
@@ -349,11 +348,11 @@ func TestRelayArguments(t *testing.T) {
 		`
 		errors := runRule(t, rule, schema)
 		expectedMessage := "Field `Query.users` has `before` argument but is missing `last` argument for complete backward pagination."
-		
+
 		if countRuleErrors(errors, "relay-arguments") != 1 {
 			t.Errorf("Expected exactly 1 error for incomplete backward pagination, got %d", countRuleErrors(errors, "relay-arguments"))
 		}
-		
+
 		if !containsError(errors, expectedMessage) {
 			t.Errorf("Expected error message: %s", expectedMessage)
 		}
@@ -387,11 +386,11 @@ func TestRelayArguments(t *testing.T) {
 		`
 		errors := runRule(t, rule, schema)
 		expectedMessage := "Field `Query.users` argument `first` must be a non-negative integer type (Int), but is String."
-		
+
 		if countRuleErrors(errors, "relay-arguments") != 1 {
 			t.Errorf("Expected exactly 1 error for invalid first argument type, got %d", countRuleErrors(errors, "relay-arguments"))
 		}
-		
+
 		if !containsError(errors, expectedMessage) {
 			t.Errorf("Expected error message: %s", expectedMessage)
 		}
@@ -425,11 +424,11 @@ func TestRelayArguments(t *testing.T) {
 		`
 		errors := runRule(t, rule, schema)
 		expectedMessage := "Field `Query.users` argument `after` must be a Cursor type (String), but is Int."
-		
+
 		if countRuleErrors(errors, "relay-arguments") != 1 {
 			t.Errorf("Expected exactly 1 error for invalid after argument type, got %d", countRuleErrors(errors, "relay-arguments"))
 		}
-		
+
 		if !containsError(errors, expectedMessage) {
 			t.Errorf("Expected error message: %s", expectedMessage)
 		}
@@ -463,11 +462,11 @@ func TestRelayArguments(t *testing.T) {
 		`
 		errors := runRule(t, rule, schema)
 		expectedMessage := "Field `Query.users` argument `last` must be a non-negative integer type (Int), but is String."
-		
+
 		if countRuleErrors(errors, "relay-arguments") != 1 {
 			t.Errorf("Expected exactly 1 error for invalid last argument type, got %d", countRuleErrors(errors, "relay-arguments"))
 		}
-		
+
 		if !containsError(errors, expectedMessage) {
 			t.Errorf("Expected error message: %s", expectedMessage)
 		}
@@ -501,11 +500,11 @@ func TestRelayArguments(t *testing.T) {
 		`
 		errors := runRule(t, rule, schema)
 		expectedMessage := "Field `Query.users` argument `before` must be a Cursor type (String), but is Int."
-		
+
 		if countRuleErrors(errors, "relay-arguments") != 1 {
 			t.Errorf("Expected exactly 1 error for invalid before argument type, got %d", countRuleErrors(errors, "relay-arguments"))
 		}
-		
+
 		if !containsError(errors, expectedMessage) {
 			t.Errorf("Expected error message: %s", expectedMessage)
 		}
@@ -539,11 +538,11 @@ func TestRelayArguments(t *testing.T) {
 		`
 		errors := runRule(t, rule, schema)
 		expectedMessage := "Field `User.friends` returns Connection type but lacks proper pagination arguments. Must include forward pagination arguments (first and after), backward pagination arguments (last and before), or both."
-		
+
 		if countRuleErrors(errors, "relay-arguments") != 1 {
 			t.Errorf("Expected exactly 1 error for Connection field in object type, got %d", countRuleErrors(errors, "relay-arguments"))
 		}
-		
+
 		if !containsError(errors, expectedMessage) {
 			t.Errorf("Expected error message: %s", expectedMessage)
 		}
@@ -577,19 +576,19 @@ func TestRelayArguments(t *testing.T) {
 		}
 		`
 		errors := runRule(t, rule, schema)
-		
+
 		// Both the interface and the implementing type should be flagged
 		if countRuleErrors(errors, "relay-arguments") != 2 {
 			t.Errorf("Expected exactly 2 errors for Connection fields in interface and implementing type, got %d", countRuleErrors(errors, "relay-arguments"))
 		}
-		
+
 		expectedMessage1 := "Field `Node.connections` returns Connection type but lacks proper pagination arguments. Must include forward pagination arguments (first and after), backward pagination arguments (last and before), or both."
 		expectedMessage2 := "Field `User.connections` returns Connection type but lacks proper pagination arguments. Must include forward pagination arguments (first and after), backward pagination arguments (last and before), or both."
-		
+
 		if !containsError(errors, expectedMessage1) {
 			t.Errorf("Expected error message: %s", expectedMessage1)
 		}
-		
+
 		if !containsError(errors, expectedMessage2) {
 			t.Errorf("Expected error message: %s", expectedMessage2)
 		}
@@ -638,11 +637,11 @@ func TestRelayArguments(t *testing.T) {
 		`
 		errors := runRule(t, rule, schema)
 		expectedMessage := "Field `User.posts` returns Connection type but lacks proper pagination arguments. Must include forward pagination arguments (first and after), backward pagination arguments (last and before), or both."
-		
+
 		if countRuleErrors(errors, "relay-arguments") != 1 {
 			t.Errorf("Expected exactly 1 error for nested Connection field, got %d", countRuleErrors(errors, "relay-arguments"))
 		}
-		
+
 		if !containsError(errors, expectedMessage) {
 			t.Errorf("Expected error message: %s", expectedMessage)
 		}

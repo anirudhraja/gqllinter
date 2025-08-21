@@ -170,30 +170,6 @@ func (r *RelayArguments) validateConnectionFieldArguments(parentType *ast.Defini
 	return errors
 }
 
-// hasValidFirstArgument checks if the field has a valid 'first' argument (non-negative integer)
-func (r *RelayArguments) hasValidFirstArgument(field *ast.FieldDefinition) bool {
-	arg := r.findArgument(field, "first")
-	return arg != nil && r.isIntegerType(arg.Type)
-}
-
-// hasValidAfterArgument checks if the field has a valid 'after' argument (Cursor type)
-func (r *RelayArguments) hasValidAfterArgument(field *ast.FieldDefinition) bool {
-	arg := r.findArgument(field, "after")
-	return arg != nil && r.isCursorType(arg.Type)
-}
-
-// hasValidLastArgument checks if the field has a valid 'last' argument (non-negative integer)
-func (r *RelayArguments) hasValidLastArgument(field *ast.FieldDefinition) bool {
-	arg := r.findArgument(field, "last")
-	return arg != nil && r.isIntegerType(arg.Type)
-}
-
-// hasValidBeforeArgument checks if the field has a valid 'before' argument (Cursor type)
-func (r *RelayArguments) hasValidBeforeArgument(field *ast.FieldDefinition) bool {
-	arg := r.findArgument(field, "before")
-	return arg != nil && r.isCursorType(arg.Type)
-}
-
 // hasArgument checks if the field has an argument with the given name (regardless of type)
 func (r *RelayArguments) hasArgument(field *ast.FieldDefinition, argName string) bool {
 	return r.findArgument(field, argName) != nil
