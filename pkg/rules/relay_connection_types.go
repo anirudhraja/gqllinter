@@ -37,9 +37,9 @@ func (r *RelayConnectionTypes) Check(schema *ast.Schema, source *ast.Source) []t
 		if def.BuiltIn || strings.HasPrefix(def.Name, "__") {
 			continue
 		}
-
+		lowerCaseDefName := strings.ToLower(def.Name)
 		// Check if this is a Connection type (ends with "Connection")
-		if strings.HasSuffix(def.Name, "Connection") {
+		if strings.HasSuffix(lowerCaseDefName, "connection") {
 			errors = append(errors, r.validateConnectionType(def, source)...)
 		}
 	}
@@ -74,7 +74,6 @@ func (r *RelayConnectionTypes) validateConnectionType(connectionType *ast.Defini
 	}
 
 	// Rule 2: Connection type must contain an "edges" field that returns a list type
-	// TODO (bishnu.agrawal) - revisit the rule
 	edgesField := r.findField(connectionType, "edges")
 	if edgesField == nil {
 		errors = append(errors, types.LintError{
@@ -88,6 +87,7 @@ func (r *RelayConnectionTypes) validateConnectionType(connectionType *ast.Defini
 			Rule: r.Name(),
 		})
 	} else {
+		// TODO: Do we need to add a check that edges object name is <prefix>Edge?
 		// Validate that edges field returns a list type
 		if !r.isListType(edgesField.Type) {
 			fieldLine, fieldColumn := 1, 1
@@ -98,7 +98,7 @@ func (r *RelayConnectionTypes) validateConnectionType(connectionType *ast.Defini
 
 			errors = append(errors, types.LintError{
 				Message: fmt.Sprintf("Connection type `%s` field `edges` must return a list type, but returns %s.",
-					connectionType.Name, r.typeToString(edgesField.Type)),
+					connectionType.Name, edgesField.Type.String()),
 				Location: types.Location{
 					Line:   fieldLine,
 					Column: fieldColumn,
@@ -114,9 +114,9 @@ func (r *RelayConnectionTypes) validateConnectionType(connectionType *ast.Defini
 	}
 
 	// Rule 3: Connection type must contain a "pageInfo" field that returns non-null PageInfo
-	// TODO (bishnu.agrawal) - revisit the rule
 	pageInfoField := r.findField(connectionType, "pageInfo")
-	// || pageInfoField.Type.NamedType != ast.Object - TODO
+	// TODO: Do we need to add a check that pageInfo object name is PageInfo?
+	// pageInfo: randomName! is allowed?
 	if pageInfoField == nil || !pageInfoField.Type.NonNull {
 		errors = append(errors, types.LintError{
 			Message: fmt.Sprintf("Connection type `%s` must contain a field `pageInfo` that returns a non-null PageInfo Object type.",
@@ -129,12 +129,6 @@ func (r *RelayConnectionTypes) validateConnectionType(connectionType *ast.Defini
 			Rule: r.Name(),
 		})
 	}
-	//else {
-	//	// Additionally validate that the PageInfo type itself follows Relay specification
-	//	// TODO
-	//	//pageInfoErrors := NewRelayPageInfo().ValidatePageInfoType(pageInfoField, source)
-	//	//errors = append(errors, pageInfoErrors...)
-	//}
 
 	return errors
 }
@@ -162,26 +156,4 @@ func (r *RelayConnectionTypes) isListType(fieldType *ast.Type) bool {
 	}
 
 	return false
-}
-
-// typeToString converts a GraphQL type to its string representation
-func (r *RelayConnectionTypes) typeToString(fieldType *ast.Type) string {
-	if fieldType.NonNull {
-		if fieldType.NamedType != "" {
-			return fieldType.NamedType + "!"
-		}
-		if fieldType.Elem != nil {
-			return r.typeToString(fieldType.Elem) + "!"
-		}
-	}
-
-	if fieldType.NamedType != "" {
-		return fieldType.NamedType
-	}
-
-	if fieldType.Elem != nil {
-		return "[" + r.typeToString(fieldType.Elem) + "]"
-	}
-
-	return "Unknown"
 }
