@@ -56,3 +56,24 @@ func getListElementType(fieldType *ast.Type) *ast.Type {
 
 	return nil
 }
+
+// isPascalCase checks if a string follows PascalCase convention
+func isPascalCase(s string) bool {
+	if len(s) == 0 {
+		return false
+	}
+
+	// Must start with uppercase letter
+	if s[0] < 'A' || s[0] > 'Z' {
+		return false
+	}
+
+	// Check that all characters are valid (letters and numbers only)
+	for _, char := range s {
+		if !((char >= 'A' && char <= 'Z') || (char >= 'a' && char <= 'z') || (char >= '0' && char <= '9')) {
+			return false
+		}
+	}
+
+	return true
+}
