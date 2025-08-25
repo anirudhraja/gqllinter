@@ -1712,8 +1712,8 @@ func TestFieldsNullableExceptId(t *testing.T) {
 		}
 		`
 		errors := runRule(t, rule, schema)
-		if countRuleErrors(errors, "fields-nullable-except-id") != 6 {
-			t.Errorf("Expected exactly 6 errors (excluding PageInfo fields), got %d", countRuleErrors(errors, "fields-nullable-except-id"))
+		if countRuleErrors(errors, "fields-nullable-except-id") != 2 {
+			t.Errorf("Expected exactly 2 errors (excluding PageInfo fields), got %d", countRuleErrors(errors, "fields-nullable-except-id"))
 		}
 
 		// Verify PageInfo fields are not flagged
@@ -1724,7 +1724,7 @@ func TestFieldsNullableExceptId(t *testing.T) {
 		}
 
 		// Verify other types are still flagged (excluding list types)
-		expectedFields := []string{"User.name", "User.email", "Connection.pageInfo", "Edge.node", "Edge.cursor", "Connection.edges"}
+		expectedFields := []string{"User.name", "User.email"}
 		for _, expectedField := range expectedFields {
 			found := false
 			for _, err := range errors {

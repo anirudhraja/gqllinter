@@ -54,7 +54,6 @@ func New() *Linter {
 			rules.NewFieldsNullableExceptId(),
 			rules.NewRelayPageInfo(),
 			rules.NewRelayEdgeTypes(),
-			//rules.NewRelayConnectionTypes(), Fix the linting rules and then enable it later
 			rules.NewUnsupportedDirectives(),
 			rules.NewDirectivesCommonLint(),
 			rules.NewNoSameFileExtend(),
@@ -62,6 +61,9 @@ func New() *Linter {
 			rules.NewMutationLint(),
 			rules.NewBasicLint(),
 			rules.NewNoUnimplementedInterface(),
+			rules.NewRelayNamingConvention(),
+			rules.NewRelayArguments(),
+			rules.NewRelayConnectionTypes(),
 		},
 		enabledRules: make(map[string]bool),
 	}
