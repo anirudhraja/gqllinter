@@ -34,7 +34,7 @@ func (r *ListNonNullItems) Check(schema *ast.Schema, source *ast.Source) []types
 	for _, def := range schema.Types {
 		if def.Kind == ast.Object || def.Kind == ast.Interface || def.Kind == ast.InputObject {
 			// Skip introspection types
-			if strings.HasPrefix(def.Name, "__") {
+			if strings.HasPrefix(def.Name, "__") || r.isConnectionType(def.Name) {
 				continue
 			}
 
@@ -134,4 +134,9 @@ func (r *ListNonNullItems) typeToString(fieldType *ast.Type) string {
 	}
 
 	return "Unknown"
+}
+
+// isConnectionType checks if a type name indicates a connection type
+func (r *ListNonNullItems) isConnectionType(typeName string) bool {
+	return strings.HasSuffix(strings.ToLower(typeName), "connection")
 }

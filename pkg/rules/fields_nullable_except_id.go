@@ -47,7 +47,9 @@ func (r *FieldsNullableExceptId) Check(schema *ast.Schema, source *ast.Source) [
 				def.Name == "Query" ||
 				def.Name == "Mutation" ||
 				def.Name == "Subscription" ||
-				r.excludedTypes[def.Name] {
+				r.excludedTypes[def.Name] ||
+				r.isConnectionType(def.Name) ||
+				r.isEdgeType(def.Name) {
 				continue
 			}
 
@@ -144,4 +146,12 @@ func (r *FieldsNullableExceptId) typeToString(fieldType *ast.Type) string {
 	}
 
 	return "Unknown"
+}
+
+func (r *FieldsNullableExceptId) isConnectionType(typeName string) bool {
+	return strings.HasSuffix(strings.ToLower(typeName), "connection")
+}
+
+func (r *FieldsNullableExceptId) isEdgeType(typeName string) bool {
+	return strings.HasSuffix(strings.ToLower(typeName), "edge")
 }
