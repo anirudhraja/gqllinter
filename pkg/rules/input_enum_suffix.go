@@ -101,12 +101,11 @@ func (r *InputEnumSuffix) findInputEnums(schema *ast.Schema) map[string]bool {
 
 	// Check input object types
 	for _, def := range schema.Types {
+		// Skip introspection types
+		if strings.HasPrefix(def.Name, "__") {
+			continue
+		}
 		if def.Kind == ast.InputObject {
-			// Skip introspection types
-			if strings.HasPrefix(def.Name, "__") {
-				continue
-			}
-
 			for _, field := range def.Fields {
 				enumType := r.getBaseTypeName(field.Type)
 				if r.isEnum(schema, enumType) {

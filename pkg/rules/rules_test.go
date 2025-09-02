@@ -1492,6 +1492,22 @@ func TestMutationResponseNullable(t *testing.T) {
 func TestFieldsNullableExceptId(t *testing.T) {
 	rule := NewFieldsNullableExceptId()
 
+	t.Run("Should Pass", func(t *testing.T) {
+		schema := `
+		schema {
+  			query: MyQuery
+		}
+		type MyQuery {
+  			dummy: String
+		}
+		`
+		errors := runRule(t, rule, schema)
+		// Should flag name, email, age, title, price (5 total) but not id or productId
+		if countRuleErrors(errors, "fields-nullable-except-id") != 0 {
+			t.Errorf("Expected no errors for non-null non-ID fields, got %d", countRuleErrors(errors, "fields-nullable-except-id"))
+		}
+	})
+
 	t.Run("should flag non-null fields except ID", func(t *testing.T) {
 		schema := `
 		type User {

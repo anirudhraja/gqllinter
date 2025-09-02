@@ -33,11 +33,11 @@ func (r *Alphabetize) Check(schema *ast.Schema, source *ast.Source) []types.Lint
 
 	// Check fields in object types and interfaces
 	for _, def := range schema.Types {
+		// Skip introspection types
+		if strings.HasPrefix(def.Name, "__") {
+			continue
+		}
 		if def.Kind == ast.Object || def.Kind == ast.Interface {
-			// Skip introspection types
-			if strings.HasPrefix(def.Name, "__") {
-				continue
-			}
 
 			// Get field names, filtering out built-in and introspection fields
 			var fieldNames []string
@@ -75,11 +75,6 @@ func (r *Alphabetize) Check(schema *ast.Schema, source *ast.Source) []types.Lint
 
 		// Check enum values
 		if def.Kind == ast.Enum {
-			// Skip introspection types
-			if strings.HasPrefix(def.Name, "__") {
-				continue
-			}
-
 			// Get enum value names
 			enumNames := make([]string, len(def.EnumValues))
 			for i, enumValue := range def.EnumValues {
@@ -112,11 +107,6 @@ func (r *Alphabetize) Check(schema *ast.Schema, source *ast.Source) []types.Lint
 
 		// Check input object fields
 		if def.Kind == ast.InputObject {
-			// Skip introspection types
-			if strings.HasPrefix(def.Name, "__") {
-				continue
-			}
-
 			// Get field names, filtering out built-in and introspection fields
 			var fieldNames []string
 			for _, field := range def.Fields {

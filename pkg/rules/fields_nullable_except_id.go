@@ -41,10 +41,12 @@ func (r *FieldsNullableExceptId) Check(schema *ast.Schema, source *ast.Source) [
 
 	// Check all object types
 	for _, def := range schema.Types {
+		// Skip introspection types, root types, and excluded types
+		if strings.HasPrefix(def.Name, "__") {
+			continue
+		}
 		if def.Kind == ast.Object {
-			// Skip introspection types, root types, and excluded types
-			if strings.HasPrefix(def.Name, "__") ||
-				def.Name == "Query" ||
+			if def.Name == "Query" ||
 				def.Name == "Mutation" ||
 				def.Name == "Subscription" ||
 				r.excludedTypes[def.Name] ||
@@ -55,6 +57,10 @@ func (r *FieldsNullableExceptId) Check(schema *ast.Schema, source *ast.Source) [
 
 			// Check each field in the type
 			for _, field := range def.Fields {
+				// Skip introspection types, root types, and excluded types
+				if strings.HasPrefix(field.Name, "__") {
+					continue
+				}
 				if r.shouldBeNullable(field) && r.isNonNullType(field.Type) {
 					line, column := 1, 1
 					if field.Position != nil {
