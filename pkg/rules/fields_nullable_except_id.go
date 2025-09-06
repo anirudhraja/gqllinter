@@ -10,19 +10,11 @@ import (
 
 // FieldsNullableExceptId checks that all fields are nullable except ID fields
 type FieldsNullableExceptId struct {
-	// excludedTypes contains object/type names that should be excluded from this rule
-	excludedTypes map[string]bool
 }
 
 // NewFieldsNullableExceptId creates a new instance of the FieldsNullableExceptId rule
 func NewFieldsNullableExceptId() *FieldsNullableExceptId {
-	excludedTypes := map[string]bool{
-		"PageInfo": true,
-	}
-
-	return &FieldsNullableExceptId{
-		excludedTypes: excludedTypes,
-	}
+	return &FieldsNullableExceptId{}
 }
 
 // Name returns the rule name
@@ -45,13 +37,27 @@ func (r *FieldsNullableExceptId) Check(schema *ast.Schema, source *ast.Source) [
 		if strings.HasPrefix(def.Name, "__") {
 			continue
 		}
-		if def.Kind == ast.Object {
+		if def.Kind == ast.Object || def.Kind == ast.Interface {
 			if def.Name == "Query" ||
 				def.Name == "Mutation" ||
-				def.Name == "Subscription" ||
-				r.excludedTypes[def.Name] ||
-				r.isConnectionType(def.Name) ||
-				r.isEdgeType(def.Name) {
+				def.Name == "Subscription" {
+				continue
+			}
+
+			allowedNonNullableFields := []string{}
+
+			for _, directive := range def.Directives {
+				if directive.Name == "key" {
+					for _, arg := range directive.Arguments {
+						if arg.Name == "fields" {
+							fields := strings.Split(arg.Value.Raw, " ")
+							allowedNonNullableFields = append(allowedNonNullableFields, fields...)
+						}
+					}
+				}
+			}
+
+			if len(allowedNonNullableFields) == 0 {
 				continue
 			}
 
@@ -61,7 +67,7 @@ func (r *FieldsNullableExceptId) Check(schema *ast.Schema, source *ast.Source) [
 				if strings.HasPrefix(field.Name, "__") {
 					continue
 				}
-				if r.shouldBeNullable(field) && r.isNonNullType(field.Type) {
+				if r.shouldBeNullable(field, allowedNonNullableFields) && r.isNonNullType(field.Type) {
 					line, column := 1, 1
 					if field.Position != nil {
 						line = field.Position.Line
@@ -88,14 +94,9 @@ func (r *FieldsNullableExceptId) Check(schema *ast.Schema, source *ast.Source) [
 }
 
 // shouldBeNullable determines if a field should be nullable (all except ID fields)
-func (r *FieldsNullableExceptId) shouldBeNullable(field *ast.FieldDefinition) bool {
-	// ID fields can be non-null
-	if field.Name == "id" || strings.HasSuffix(field.Name, "Id") || strings.HasSuffix(field.Name, "ID") {
-		// Additional check: make sure it's actually an ID type
-		typeName := r.getTypeName(field.Type)
-		if typeName == "ID" {
-			return false
-		}
+func (r *FieldsNullableExceptId) shouldBeNullable(field *ast.FieldDefinition, allowedNonNullableFields []string) bool {
+	if contains(allowedNonNullableFields, field.Name) {
+		return false
 	}
 
 	// All other fields should be nullable
@@ -152,12 +153,4 @@ func (r *FieldsNullableExceptId) typeToString(fieldType *ast.Type) string {
 	}
 
 	return "Unknown"
-}
-
-func (r *FieldsNullableExceptId) isConnectionType(typeName string) bool {
-	return strings.HasSuffix(strings.ToLower(typeName), "connection")
-}
-
-func (r *FieldsNullableExceptId) isEdgeType(typeName string) bool {
-	return strings.HasSuffix(strings.ToLower(typeName), "edge")
 }
