@@ -549,11 +549,11 @@ func TestNamingConvention(t *testing.T) {
 				User_id: ID!
 				display_name: String!
 			}
-			
+
 			interface NodeInterface {
 				id: ID!
 			}
-			
+
 			enum statusEnum {
 				active
 				inactive
@@ -575,17 +575,17 @@ func TestNamingConvention(t *testing.T) {
 				displayName: String!
 				email: String!
 			}
-			
+
 			interface Node {
 				id: ID!
 			}
-			
+
 			enum UserStatus {
 				ACTIVE
 				INACTIVE
 				PENDING
 			}
-			
+
 			input UserInput {
 				displayName: String!
 				email: String!
@@ -680,7 +680,7 @@ func TestNoScalarResultTypeOnMutation(t *testing.T) {
 		type Mutation {
 			createUser: CreateUserResult
 		}
-		
+
 		type CreateUserResult {
 			success: Boolean!
 		}
@@ -733,31 +733,31 @@ func TestInputName(t *testing.T) {
 			getUser(request: GetUserRequest!): User
 			listUsers(request: ListUsersRequest!): [User!]!
 		}
-		
+
 		type Mutation {
 			createUser(request: CreateUserRequest!): User!
 			updateUser(request: UpdateUserRequest!): User!
 		}
-		
+
 		type User {
 			id: ID!
 			name: String!
 		}
-		
+
 		input GetUserRequest {
 			id: ID!
 		}
-		
+
 		input ListUsersRequest {
 			limit: Int
 			offset: Int
 		}
-		
+
 		input CreateUserRequest {
 			name: String!
 			email: String!
 		}
-		
+
 		input UpdateUserRequest {
 			id: ID!
 			name: String
@@ -777,26 +777,26 @@ func TestInputName(t *testing.T) {
 			getUser(request: GetUserRequestV2!): User
 			listUsers(request: ListUsersRequestVersion3!): [User!]!
 		}
-		
+
 		type Mutation {
 			createUser(request: CreateUserRequestV1!): User!
 		}
-		
+
 		type User {
 			id: ID!
 		}
-		
+
 		input GetUserRequestV2 {
 			id: ID!
 			includeProfile: Boolean
 		}
-		
+
 		input ListUsersRequestVersion3 {
 			limit: Int
 			offset: Int
 			filter: String
 		}
-		
+
 		input CreateUserRequestV1 {
 			name: String!
 		}
@@ -814,11 +814,11 @@ func TestInputName(t *testing.T) {
 			allUsers: [User!]!
 			currentTime: String!
 		}
-		
+
 		type Mutation {
 			refreshCache: Boolean!
 		}
-		
+
 		type User {
 			id: ID!
 		}
@@ -835,23 +835,23 @@ func TestInputName(t *testing.T) {
 			getUser(input: GetUserRequest!): User
 			listUsers(params: ListUsersRequest!): [User!]!
 		}
-		
+
 		type Mutation {
 			createUser(data: CreateUserRequest!): User!
 		}
-		
+
 		type User {
 			id: ID!
 		}
-		
+
 		input GetUserRequest {
 			id: ID!
 		}
-		
+
 		input ListUsersRequest {
 			limit: Int
 		}
-		
+
 		input CreateUserRequest {
 			name: String!
 		}
@@ -869,23 +869,23 @@ func TestInputName(t *testing.T) {
 			getUser(request: UserInput!): User
 			listUsers(request: UsersFilter!): [User!]!
 		}
-		
+
 		type Mutation {
 			createUser(request: NewUserData!): User!
 		}
-		
+
 		type User {
 			id: ID!
 		}
-		
+
 		input UserInput {
 			id: ID!
 		}
-		
+
 		input UsersFilter {
 			limit: Int
 		}
-		
+
 		input NewUserData {
 			name: String!
 		}
@@ -902,11 +902,11 @@ func TestInputName(t *testing.T) {
 			getUser(id: ID!, includeProfile: Boolean): User
 			listUsers(limit: Int, offset: Int, filter: String): [User!]!
 		}
-		
+
 		type Mutation {
 			createUser(name: String!, email: String!, age: Int): User!
 		}
-		
+
 		type User {
 			id: ID!
 		}
@@ -925,28 +925,28 @@ func TestInputName(t *testing.T) {
 			listUsers(input: ListUsersRequest!): [User!]!
 			searchUsers(query: String!, limit: Int): [User!]!
 		}
-		
+
 		type Mutation {
 			createUser(request: CreateUserRequest!): User!
 			updateUser(data: UpdateUserInput!): User!
 		}
-		
+
 		type User {
 			id: ID!
 		}
-		
+
 		input GetUserRequest {
 			id: ID!
 		}
-		
+
 		input ListUsersRequest {
 			limit: Int
 		}
-		
+
 		input CreateUserRequest {
 			name: String!
 		}
-		
+
 		input UpdateUserInput {
 			id: ID!
 			name: String
@@ -968,11 +968,11 @@ func TestNoUnusedTypes(t *testing.T) {
 		type Query {
 			user: User
 		}
-		
+
 		type User {
 			id: ID!
 		}
-		
+
 		type UnusedType {
 			value: String!
 		}
@@ -994,12 +994,12 @@ func TestNoUnusedTypes(t *testing.T) {
 		type Query {
 			user: User
 		}
-		
+
 		type User {
 			id: ID!
 			profile: Profile
 		}
-		
+
 		type Profile {
 			bio: String!
 		}
@@ -1049,11 +1049,11 @@ func TestEnumUnknownCase(t *testing.T) {
 		type Query {
 			user: User
 		}
-		
+
 		type User {
 			status: UserStatus!
 		}
-		
+
 		enum UserStatus {
 			UNKNOWN
 			ACTIVE
@@ -1077,11 +1077,11 @@ func TestEnumUnknownCase(t *testing.T) {
 		type Query {
 			user: User
 		}
-		
+
 		type User {
 			status: UserStatus!
 		}
-		
+
 		enum UserStatus {
 			ACTIVE
 			INACTIVE
@@ -1100,12 +1100,12 @@ func TestEnumUnknownCase(t *testing.T) {
 			UNKNOWN
 			ACTIVE
 		}
-		
+
 		enum Status2 {
 			UNKNOWN
 			INACTIVE
 		}
-		
+
 		enum Status3 {
 			ACTIVE
 			INACTIVE
@@ -1128,7 +1128,7 @@ func TestNoQueryPrefixes(t *testing.T) {
 			listUsers: [User!]!
 			findProducts: [String!]!
 		}
-		
+
 		type User {
 			id: ID!
 		}
@@ -1146,7 +1146,7 @@ func TestNoQueryPrefixes(t *testing.T) {
 			users: [User!]!
 			products: [String!]!
 		}
-		
+
 		type User {
 			id: ID!
 		}
@@ -1166,7 +1166,7 @@ func TestInputEnumSuffix(t *testing.T) {
 		input CreateUserInput {
 			role: Role!
 		}
-		
+
 		enum Role {
 			USER
 			ADMIN
@@ -1183,7 +1183,7 @@ func TestInputEnumSuffix(t *testing.T) {
 		input CreateUserInput {
 			role: RoleInput!
 		}
-		
+
 		enum RoleInput {
 			USER
 			ADMIN
@@ -1312,13 +1312,13 @@ func TestMutationResponseNullable(t *testing.T) {
 		type Mutation {
 			createUser: CreateUserResult!
 		}
-		
+
 		type CreateUserResult {
 			user: User!
 			success: Boolean!
 			message: String!
 		}
-		
+
 		type User {
 			id: ID!
 		}
@@ -1351,18 +1351,18 @@ func TestMutationResponseNullable(t *testing.T) {
 			createUser: CreateUserResult!
 			updateUser: UpdateUserResult!
 		}
-		
+
 		type CreateUserResult {
 			user: User
 			success: Boolean
 			errors: [String]
 		}
-		
+
 		type UpdateUserResult {
 			user: User
 			message: String
 		}
-		
+
 		type User {
 			id: ID!
 			name: String
@@ -1415,22 +1415,22 @@ func TestMutationResponseNullable(t *testing.T) {
 		type Mutation {
 			createOrder: CreateOrderResult!
 		}
-		
+
 		type CreateOrderResult {
 			order: Order!
 			payment: Payment!
 		}
-		
+
 		type Order {
 			id: ID!
 			items: [OrderItem!]!
 		}
-		
+
 		type Payment {
 			id: ID!
 			amount: Float!
 		}
-		
+
 		type OrderItem {
 			id: ID!
 			quantity: Int!
@@ -1448,7 +1448,7 @@ func TestMutationResponseNullable(t *testing.T) {
 		type Query {
 			user: User
 		}
-		
+
 		type User {
 			id: ID!
 		}
@@ -1464,19 +1464,19 @@ func TestMutationResponseNullable(t *testing.T) {
 		type Mutation {
 			createContent: CreateContentResult!
 		}
-		
+
 		type CreateContentResult {
 			content: Content!
 			success: Boolean!
 		}
-		
+
 		union Content = Article | Video
-		
+
 		type Article {
 			id: ID!
 			title: String!
 		}
-		
+
 		type Video {
 			id: ID!
 			duration: Int!
@@ -1510,14 +1510,16 @@ func TestFieldsNullableExceptId(t *testing.T) {
 
 	t.Run("should flag non-null fields except ID", func(t *testing.T) {
 		schema := `
-		type User {
+		directive @key(fields: String!) on OBJECT
+
+		type User @key(fields: "id") {
 			id: ID!
 			name: String!
 			email: String!
 			age: Int!
 		}
-		
-		type Product {
+
+		type Product @key(fields: "productId") {
 			productId: ID!
 			title: String!
 			price: Float!
@@ -1554,20 +1556,22 @@ func TestFieldsNullableExceptId(t *testing.T) {
 
 	t.Run("should pass nullable fields and ID fields", func(t *testing.T) {
 		schema := `
-		type User {
+		directive @key(fields: String!) on OBJECT
+
+		type User @key(fields: "id") {
 			id: ID!
 			name: String
 			email: String
 			age: Int
 			profile: UserProfile
 		}
-		
-		type UserProfile {
+
+		type UserProfile @key(fields: "profileId") {
 			profileId: ID!
 			bio: String
 			avatar: String
 		}
-		
+
 		type Query {
 			user: User
 			users: [User!]!
@@ -1581,14 +1585,16 @@ func TestFieldsNullableExceptId(t *testing.T) {
 
 	t.Run("should handle different ID field naming patterns", func(t *testing.T) {
 		schema := `
-		type User {
+		directive @key(fields: String!) on OBJECT
+
+		type User @key(fields: "id userId") {
 			id: ID!
 			userId: ID!
 			userID: ID!
 			name: String!
 		}
-		
-		type Order {
+
+		type Order @key(fields: "orderId") @key(fields: "customerId") {
 			orderId: ID!
 			customerId: ID!
 			amount: Float!
@@ -1596,12 +1602,12 @@ func TestFieldsNullableExceptId(t *testing.T) {
 		`
 		errors := runRule(t, rule, schema)
 		// Should only flag name and amount (2 errors), not the ID fields
-		if countRuleErrors(errors, "fields-nullable-except-id") != 2 {
-			t.Errorf("Expected exactly 2 errors for non-ID fields, got %d", countRuleErrors(errors, "fields-nullable-except-id"))
+		if countRuleErrors(errors, "fields-nullable-except-id") != 3 {
+			t.Errorf("Expected exactly 3 errors for non-ID fields, got %d", countRuleErrors(errors, "fields-nullable-except-id"))
 		}
 
 		// Verify it flags the right fields
-		expectedFields := []string{"User.name", "Order.amount"}
+		expectedFields := []string{"User.userID", "User.name", "Order.amount"}
 		for _, expectedField := range expectedFields {
 			found := false
 			for _, err := range errors {
@@ -1618,7 +1624,9 @@ func TestFieldsNullableExceptId(t *testing.T) {
 
 	t.Run("should handle list types correctly", func(t *testing.T) {
 		schema := `
-		type User {
+		directive @key(fields: String!) on OBJECT
+
+		type User @key(fields: "id") {
 			id: ID!
 			tags: [String!]!
 			friends: [User!]!
@@ -1634,26 +1642,28 @@ func TestFieldsNullableExceptId(t *testing.T) {
 
 	t.Run("should skip root operation types", func(t *testing.T) {
 		schema := `
+		directive @key(fields: String!) on OBJECT
+
 		type Query {
 			user: User!
 			product: Product!
 		}
-		
+
 		type Mutation {
 			createUser: User!
 			deleteUser: Boolean!
 		}
-		
+
 		type Subscription {
 			userUpdated: User!
 		}
-		
-		type User {
+
+		type User @key(fields: "id") {
 			id: ID!
 			name: String
 		}
-		
-		type Product {
+
+		type Product @key(fields: "id") {
 			id: ID!
 			title: String
 		}
@@ -1667,7 +1677,9 @@ func TestFieldsNullableExceptId(t *testing.T) {
 
 	t.Run("should handle non-ID fields with ID in name correctly", func(t *testing.T) {
 		schema := `
-		type User {
+		directive @key(fields: String!) on OBJECT
+
+		type User @key(fields: "id") {
 			id: ID!
 			videoId: String!
 			ideaTitle: String!
@@ -1687,8 +1699,10 @@ func TestFieldsNullableExceptId(t *testing.T) {
 		schema := `
 		scalar DateTime
 		scalar UUID
-		
-		type User {
+
+		directive @key(fields: String!) on OBJECT
+
+		type User @key(fields: "id") {
 			id: ID!
 			createdAt: DateTime!
 			uuid: UUID!
@@ -1704,24 +1718,26 @@ func TestFieldsNullableExceptId(t *testing.T) {
 
 	t.Run("should skip excluded types like PageInfo", func(t *testing.T) {
 		schema := `
+		directive @key(fields: String!) on OBJECT
+
 		type PageInfo {
 			hasNextPage: Boolean!
 			hasPreviousPage: Boolean!
 			startCursor: String!
 			endCursor: String!
 		}
-		
-		type User {
+
+		type User @key(fields: "id") {
 			id: ID!
 			name: String!
 			email: String!
 		}
-		
+
 		type Connection {
 			edges: [Edge!]!
 			pageInfo: PageInfo!
 		}
-		
+
 		type Edge {
 			node: User!
 			cursor: String!
@@ -1866,41 +1882,41 @@ func TestOperationResponseName(t *testing.T) {
 			listUsers: ListUsersResponse!
 			searchUser: SearchUserResponse!
 		}
-		
+
 		type Mutation {
 			createUser(request: CreateUserRequest!): CreateUserResponse!
 			updateUser(request: UpdateUserRequest!): UpdateUserResponse!
 		}
-		
+
 		type GetUserResponse {
 			user: User
 		}
-		
+
 		type ListUsersResponse {
 			users: [User!]!
 		}
-		
+
 		type SearchUserResponse {
 			users: [User!]!
 		}
-		
+
 		type CreateUserResponse {
 			user: User
 		}
-		
+
 		type UpdateUserResponse {
 			user: User
 		}
-		
+
 		type User {
 			id: ID!
 			name: String!
 		}
-		
+
 		input CreateUserRequest {
 			name: String!
 		}
-		
+
 		input UpdateUserRequest {
 			id: ID!
 			name: String!
@@ -1920,23 +1936,23 @@ func TestOperationResponseName(t *testing.T) {
 			getUser: UserResult!
 			listUsers: UsersData!
 		}
-		
+
 		type Mutation {
 			createUser: CreateUserResult!
 		}
-		
+
 		type UserResult {
 			user: User
 		}
-		
+
 		type UsersData {
 			users: [User!]!
 		}
-		
+
 		type CreateUserResult {
 			user: User
 		}
-		
+
 		type User {
 			id: ID!
 			name: String!
@@ -1957,23 +1973,23 @@ func TestOperationResponseName(t *testing.T) {
 			getUser: GetUserResponseV2!
 			listUsers: ListUsersResponseVersion3!
 		}
-		
+
 		type Mutation {
 			createUser: CreateUserResponseV1!
 		}
-		
+
 		type GetUserResponseV2 {
 			user: User
 		}
-		
+
 		type ListUsersResponseVersion3 {
 			users: [User!]!
 		}
-		
+
 		type CreateUserResponseV1 {
 			user: User
 		}
-		
+
 		type User {
 			id: ID!
 			name: String!
@@ -1997,37 +2013,37 @@ func TestRelayEdgeTypes(t *testing.T) {
 		interface Node {
 			id: ID!
 		}
-		
+
 		type User implements Node {
 			id: ID!
 			name: String
 		}
-		
+
 		type UserEdge {
 			node: User
 			cursor: String!
 		}
-		
+
 		type PostEdge {
 			node: Post!
 			cursor: String
 		}
-		
+
 		type Post implements Node {
 			id: ID!
 			title: String
 		}
-		
+
 		type UserConnection {
 			edges: [UserEdge]
 			pageInfo: PageInfo!
 		}
-		
+
 		type PostConnection {
 			edges: [PostEdge!]!
 			pageInfo: PageInfo!
 		}
-		
+
 		type PageInfo {
 			hasNextPage: Boolean!
 			hasPreviousPage: Boolean!
@@ -2045,16 +2061,16 @@ func TestRelayEdgeTypes(t *testing.T) {
 			node: User
 			cursor: String
 		}
-		
+
 		type User {
 			id: ID!
 		}
-		
+
 		type UserConnection {
 			edges: [UserEdge]
 			pageInfo: PageInfo!
 		}
-		
+
 		type PageInfo {
 			hasNextPage: Boolean!
 			hasPreviousPage: Boolean!
@@ -2077,16 +2093,16 @@ func TestRelayEdgeTypes(t *testing.T) {
 			cursor: String!
 			data: User
 		}
-		
+
 		type User {
 			id: ID!
 		}
-		
+
 		type UserConnection {
 			edges: [UserEdge]
 			pageInfo: PageInfo!
 		}
-		
+
 		type PageInfo {
 			hasNextPage: Boolean!
 			hasPreviousPage: Boolean!
@@ -2109,16 +2125,16 @@ func TestRelayEdgeTypes(t *testing.T) {
 			node: User!
 			id: String!
 		}
-		
+
 		type User {
 			id: ID!
 		}
-		
+
 		type UserConnection {
 			edges: [UserEdge]
 			pageInfo: PageInfo!
 		}
-		
+
 		type PageInfo {
 			hasNextPage: Boolean!
 			hasPreviousPage: Boolean!
@@ -2141,16 +2157,16 @@ func TestRelayEdgeTypes(t *testing.T) {
 			node: [User!]!
 			cursor: String!
 		}
-		
+
 		type User {
 			id: ID!
 		}
-		
+
 		type UserConnection {
 			edges: [UserEdge]
 			pageInfo: PageInfo!
 		}
-		
+
 		type PageInfo {
 			hasNextPage: Boolean!
 			hasPreviousPage: Boolean!
@@ -2195,7 +2211,7 @@ func TestRelayEdgeTypes(t *testing.T) {
 			node: User!
 			cursor: String!
 		}
-		
+
 		type User {
 			id: ID!
 		}
@@ -2213,22 +2229,22 @@ func TestRelayEdgeTypes(t *testing.T) {
 		interface Node {
 			id: ID!
 		}
-		
+
 		type User {
 			id: ID!
 			name: String
 		}
-		
+
 		type UserEdge {
 			node: User!
 			cursor: String!
 		}
-		
+
 		type UserConnection {
 			edges: [UserEdge]
 			pageInfo: PageInfo!
 		}
-		
+
 		type PageInfo {
 			hasNextPage: Boolean!
 			hasPreviousPage: Boolean!
@@ -2251,17 +2267,17 @@ func TestRelayEdgeTypes(t *testing.T) {
 			id: ID!
 			name: String
 		}
-		
+
 		type UserEdge {
 			node: User!
 			cursor: String!
 		}
-		
+
 		type UserConnection {
 			edges: [UserEdge]
 			pageInfo: PageInfo!
 		}
-		
+
 		type PageInfo {
 			hasNextPage: Boolean!
 			hasPreviousPage: Boolean!
@@ -2279,22 +2295,22 @@ func TestRelayEdgeTypes(t *testing.T) {
 		interface Node {
 			id: ID!
 		}
-		
+
 		type User implements Node {
 			id: ID!
 			name: String
 		}
-		
+
 		type UserEdge {
 			node: User!
 			cursor: String
 		}
-		
+
 		type UserConnection {
 			edges: [UserEdge]
 			pageInfo: PageInfo!
 		}
-		
+
 		type PageInfo {
 			hasNextPage: Boolean!
 			hasPreviousPage: Boolean!
@@ -2311,22 +2327,22 @@ func TestRelayEdgeTypes(t *testing.T) {
 		interface Node {
 			id: ID!
 		}
-		
+
 		interface ContentNode implements Node {
 			id: ID!
 			title: String
 		}
-		
+
 		type ContentEdge {
 			node: ContentNode!
 			cursor: String!
 		}
-		
+
 		type ContentConnection {
 			edges: [ContentEdge]
 			pageInfo: PageInfo!
 		}
-		
+
 		type PageInfo {
 			hasNextPage: Boolean!
 			hasPreviousPage: Boolean!
@@ -2343,29 +2359,29 @@ func TestRelayEdgeTypes(t *testing.T) {
 		interface Node {
 			id: ID!
 		}
-		
+
 		type User implements Node {
 			id: ID!
 			name: String
 		}
-		
+
 		type Post implements Node {
 			id: ID!
 			title: String
 		}
-		
+
 		union Content = User | Post
-		
+
 		type ContentEdge {
 			node: Content!
 			cursor: String!
 		}
-		
+
 		type ContentConnection {
 			edges: [ContentEdge]
 			pageInfo: PageInfo!
 		}
-		
+
 		type PageInfo {
 			hasNextPage: Boolean!
 			hasPreviousPage: Boolean!
@@ -2385,17 +2401,17 @@ func TestRelayEdgeTypes(t *testing.T) {
 			ACTIVE
 			INACTIVE
 		}
-		
+
 		type StatusEdge {
 			node: Status!
 			cursor: String!
 		}
-		
+
 		type StatusConnection {
 			edges: [StatusEdge]
 			pageInfo: PageInfo!
 		}
-		
+
 		type PageInfo {
 			hasNextPage: Boolean!
 			hasPreviousPage: Boolean!
@@ -2411,17 +2427,17 @@ func TestRelayEdgeTypes(t *testing.T) {
 	t.Run("should handle scalar node type", func(t *testing.T) {
 		schema := `
 		scalar DateTime
-		
+
 		type TimeEdge {
 			node: DateTime!
 			cursor: String!
 		}
-		
+
 		type TimeConnection {
 			edges: [TimeEdge]
 			pageInfo: PageInfo!
 		}
-		
+
 		type PageInfo {
 			hasNextPage: Boolean!
 			hasPreviousPage: Boolean!
@@ -2439,22 +2455,22 @@ func TestRelayEdgeTypes(t *testing.T) {
 		interface Node {
 			id: ID!
 		}
-		
+
 		type User {
 			id: ID!
 			name: String
 		}
-		
+
 		type UserEdge {
 			data: [User!]!
 			id: Int!
 		}
-		
+
 		type UserConnection {
 			edges: [UserEdge]
 			pageInfo: PageInfo!
 		}
-		
+
 		type PageInfo {
 			hasNextPage: Boolean!
 			hasPreviousPage: Boolean!
@@ -2472,24 +2488,24 @@ func TestRelayEdgeTypes(t *testing.T) {
 		interface Node {
 			id: ID!
 		}
-		
+
 		type User implements Node {
 			id: ID!
 			name: String
 		}
-		
+
 		type UserEdge {
 			node: User!
 			cursor: String!
 			metadata: String
 			createdAt: String
 		}
-		
+
 		type UserConnection {
 			edges: [UserEdge]
 			pageInfo: PageInfo!
 		}
-		
+
 		type PageInfo {
 			hasNextPage: Boolean!
 			hasPreviousPage: Boolean!
@@ -2508,12 +2524,12 @@ func TestRelayEdgeTypes(t *testing.T) {
 			id: ID!
 			name: String
 		}
-		
+
 		type Post {
 			id: ID!
 			title: String
 		}
-		
+
 		type UserEdge {
 			node: User!
 			cursor: String!
@@ -2530,22 +2546,22 @@ func TestRelayEdgeTypes(t *testing.T) {
 		interface Node {
 			id: ID!
 		}
-		
+
 		type User implements Node {
 			id: ID!
 			name: String
 		}
-		
+
 		type UserDetail {
 			node: User!
 			cursor: String!
 		}
-		
+
 		type UserConnection {
 			edges: [UserDetail]
 			pageInfo: PageInfo!
 		}
-		
+
 		type PageInfo {
 			hasNextPage: Boolean!
 			hasPreviousPage: Boolean!
@@ -2564,22 +2580,22 @@ func TestRelayEdgeTypes(t *testing.T) {
 		interface Node {
 			id: ID!
 		}
-		
+
 		type User {
 			id: ID!
 			name: String
 		}
-		
+
 		type UserDetail {
 			node: User!
 			cursor: String!
 		}
-		
+
 		type UserConnection {
 			edges: [UserDetail]
 			pageInfo: PageInfo!
 		}
-		
+
 		type PageInfo {
 			hasNextPage: Boolean!
 			hasPreviousPage: Boolean!
@@ -2602,29 +2618,29 @@ func TestRelayEdgeTypes(t *testing.T) {
 		interface Node {
 			id: ID!
 		}
-		
+
 		type User implements Node {
 			id: ID!
 			name: String
 		}
-		
+
 		type Post {
 			id: ID!
 			title: String
 		}
-		
+
 		union Content = User | Post
-		
+
 		type ContentEdge {
 			node: Content!
 			cursor: String!
 		}
-		
+
 		type ContentConnection {
 			edges: [ContentEdge]
 			pageInfo: PageInfo!
 		}
-		
+
 		type PageInfo {
 			hasNextPage: Boolean!
 			hasPreviousPage: Boolean!
@@ -2654,33 +2670,33 @@ func TestRelayConnectionTypes(t *testing.T) {
 			startCursor: String
 			endCursor: String
 		}
-		
+
 		type UserEdge {
 			node: User
 			cursor: String!
 		}
-		
+
 		type User {
 			id: ID!
 			name: String
 		}
-		
+
 		type UserConnection {
 			edges: [UserEdge]
 			pageInfo: PageInfo!
 		}
-		
+
 		type PostConnection {
 			edges: [PostEdge!]!
 			pageInfo: PageInfo!
 			totalCount: Int
 		}
-		
+
 		type PostEdge {
 			node: Post!
 			cursor: String!
 		}
-		
+
 		type Post {
 			id: ID!
 			title: String
@@ -2698,16 +2714,16 @@ func TestRelayConnectionTypes(t *testing.T) {
 			edges: [UserEdge]
 			pageInfo: PageInfo!
 		}
-		
+
 		type UserEdge {
 			node: User
 			cursor: String!
 		}
-		
+
 		type User {
 			id: ID!
 		}
-		
+
 		type PageInfo {
 			hasNextPage: Boolean!
 			hasPreviousPage: Boolean!
@@ -2732,12 +2748,12 @@ func TestRelayConnectionTypes(t *testing.T) {
 			pageInfo: PageInfo!
 			items: [User!]!
 		}
-		
+
 		type User {
 			id: ID!
 			name: String
 		}
-		
+
 		type PageInfo {
 			hasNextPage: Boolean!
 			hasPreviousPage: Boolean!
@@ -2762,17 +2778,17 @@ func TestRelayConnectionTypes(t *testing.T) {
 			edges: UserEdge!
 			pageInfo: PageInfo!
 		}
-		
+
 		type UserEdge {
 			node: User
 			cursor: String!
 		}
-		
+
 		type User {
 			id: ID!
 			name: String
 		}
-		
+
 		type PageInfo {
 			hasNextPage: Boolean!
 			hasPreviousPage: Boolean!
@@ -2797,17 +2813,17 @@ func TestRelayConnectionTypes(t *testing.T) {
 			edges: [UserEdge]
 			pagination: PageInfo!
 		}
-		
+
 		type UserEdge {
 			node: User
 			cursor: String!
 		}
-		
+
 		type User {
 			id: ID!
 			name: String
 		}
-		
+
 		type PageInfo {
 			hasNextPage: Boolean!
 			hasPreviousPage: Boolean!
@@ -2832,17 +2848,17 @@ func TestRelayConnectionTypes(t *testing.T) {
 			edges: [UserEdge]
 			pageInfo: PageInfo
 		}
-		
+
 		type UserEdge {
 			node: User
 			cursor: String!
 		}
-		
+
 		type User {
 			id: ID!
 			name: String
 		}
-		
+
 		type PageInfo {
 			hasNextPage: Boolean!
 			hasPreviousPage: Boolean!
@@ -2867,37 +2883,37 @@ func TestRelayConnectionTypes(t *testing.T) {
 			edges: [PostEdge]
 			pageInfo: PageInfo!
 		}
-		
+
 		type UserConnection {
 			items: [User!]!
 			pageInfo: PageInfo
 		}
-		
+
 		type ProductConnection {
 			edges: Product
 			pageInfo: PageInfo!
 		}
-		
+
 		type User {
 			id: ID!
 			name: String
 		}
-		
+
 		type Product {
 			id: ID!
 			name: String
 		}
-		
+
 		type PostEdge {
 			node: Post
 			cursor: String!
 		}
-		
+
 		type Post {
 			id: ID!
 			title: String
 		}
-		
+
 		type PageInfo {
 			hasNextPage: Boolean!
 			hasPreviousPage: Boolean!
@@ -2935,11 +2951,11 @@ func TestRelayConnectionTypes(t *testing.T) {
 		type UserList {
 			items: [User!]!
 		}
-		
+
 		type UserContainer {
 			data: User
 		}
-		
+
 		type User {
 			id: ID!
 			name: String
@@ -2957,17 +2973,17 @@ func TestRelayConnectionTypes(t *testing.T) {
 			edges: [UserEdge]
 			pageInfo: PageInfo!
 		}
-		
+
 		type UserEdge {
 			node: User
 			cursor: String!
 		}
-		
+
 		type User {
 			id: ID!
 			name: String!
 		}
-		
+
 		type PageInfo {
 			hasNextPage: Boolean!
 			hasPreviousPage: Boolean!
@@ -2997,22 +3013,22 @@ func TestRelayConnectionTypes(t *testing.T) {
 			hasMore: Boolean
 			aggregates: UserAggregates
 		}
-		
+
 		type UserEdge {
 			node: User
 			cursor: String!
 		}
-		
+
 		type User {
 			id: ID!
 			name: String
 		}
-		
+
 		type UserAggregates {
 			count: Int
 			avgAge: Float
 		}
-		
+
 		type PageInfo {
 			hasNextPage: Boolean!
 			hasPreviousPage: Boolean!
@@ -3032,32 +3048,32 @@ func TestRelayConnectionTypes(t *testing.T) {
 			edges: [UserEdge]
 			pageInfo: PageInfo!
 		}
-		
+
 		type Connection2 {
 			edges: [UserEdge!]
 			pageInfo: PageInfo!
 		}
-		
+
 		type Connection3 {
 			edges: [UserEdge]!
 			pageInfo: PageInfo!
 		}
-		
+
 		type Connection4 {
 			edges: [UserEdge!]!
 			pageInfo: PageInfo!
 		}
-		
+
 		type UserEdge {
 			node: User
 			cursor: String!
 		}
-		
+
 		type User {
 			id: ID!
 			name: String
 		}
-		
+
 		type PageInfo {
 			hasNextPage: Boolean!
 			hasPreviousPage: Boolean!
@@ -3077,17 +3093,17 @@ func TestRelayConnectionTypes(t *testing.T) {
 			edges: [[UserEdge]]
 			pageInfo: PageInfo!
 		}
-		
+
 		type UserEdge {
 			node: User
 			cursor: String!
 		}
-		
+
 		type User {
 			id: ID!
 			name: String
 		}
-		
+
 		type PageInfo {
 			hasNextPage: Boolean!
 			hasPreviousPage: Boolean!
@@ -3112,17 +3128,17 @@ func TestRelayConnectionTypes(t *testing.T) {
 			edges: [[UserEdge!]!]!
 			pageInfo: PageInfo!
 		}
-		
+
 		type UserEdge {
 			node: User
 			cursor: String!
 		}
-		
+
 		type User {
 			id: ID!
 			name: String
 		}
-		
+
 		type PageInfo {
 			hasNextPage: Boolean!
 			hasPreviousPage: Boolean!
@@ -3151,7 +3167,7 @@ func TestUnsupportedDirectives(t *testing.T) {
 			id: ID!
 			name: String @deprecated(reason: "Use fullName instead")
 		}
-		
+
 		enum Status {
 			ACTIVE
 			INACTIVE
@@ -3168,7 +3184,7 @@ func TestUnsupportedDirectives(t *testing.T) {
 		directive @inaccessible on FIELD_DEFINITION
 		directive @external on FIELD_DEFINITION
 		directive @requires(fields: String!) on FIELD_DEFINITION
-		
+
 		type User {
 			id: ID!
 			name: String @inaccessible @external @requires(fields: "id")
@@ -3189,12 +3205,12 @@ func TestNoUnimplementedInterface(t *testing.T) {
 		interface Node {
 			id: ID!
 		}
-		
+
 		interface Timestamped {
 			createdAt: String!
 			updatedAt: String!
 		}
-		
+
 		type User {
 			id: ID!
 			name: String!
@@ -3222,19 +3238,19 @@ func TestNoUnimplementedInterface(t *testing.T) {
 		interface Node {
 			id: ID!
 		}
-		
+
 		interface Timestamped {
 			createdAt: String!
 			updatedAt: String!
 		}
-		
+
 		type User implements Node & Timestamped {
 			id: ID!
 			name: String!
 			createdAt: String!
 			updatedAt: String!
 		}
-		
+
 		type Post implements Node {
 			id: ID!
 			title: String!
@@ -3251,12 +3267,12 @@ func TestNoUnimplementedInterface(t *testing.T) {
 		interface Node {
 			id: ID!
 		}
-		
+
 		interface ContentNode implements Node {
 			id: ID!
 			title: String!
 		}
-		
+
 		type Post implements ContentNode & Node {
 			id: ID!
 			title: String!
@@ -3274,16 +3290,16 @@ func TestNoUnimplementedInterface(t *testing.T) {
 		interface Node {
 			id: ID!
 		}
-		
+
 		interface Timestamped {
 			createdAt: String!
 			updatedAt: String!
 		}
-		
+
 		interface Unused {
 			value: String!
 		}
-		
+
 		type User implements Node {
 			id: ID!
 			name: String!
