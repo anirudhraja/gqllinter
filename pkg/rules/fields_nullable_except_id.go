@@ -103,17 +103,6 @@ func (r *FieldsNullableExceptId) shouldBeNullable(field *ast.FieldDefinition, al
 	return true
 }
 
-// getTypeName extracts the base type name from a field type
-func (r *FieldsNullableExceptId) getTypeName(fieldType *ast.Type) string {
-	if fieldType.NamedType != "" {
-		return fieldType.NamedType
-	}
-	if fieldType.Elem != nil {
-		return r.getTypeName(fieldType.Elem)
-	}
-	return ""
-}
-
 // isNonNullType checks if a type is non-null
 func (r *FieldsNullableExceptId) isNonNullType(fieldType *ast.Type) bool {
 	return fieldType.NonNull

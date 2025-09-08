@@ -1607,7 +1607,7 @@ func TestFieldsNullableExceptId(t *testing.T) {
 		}
 
 		// Verify it flags the right fields
-		expectedFields := []string{"User.userID",  "User.name", "Order.amount"}
+		expectedFields := []string{"User.userID", "User.name", "Order.amount"}
 		for _, expectedField := range expectedFields {
 			found := false
 			for _, err := range errors {
