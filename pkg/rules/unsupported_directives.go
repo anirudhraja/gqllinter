@@ -2,6 +2,7 @@ package rules
 
 import (
 	"fmt"
+
 	"github.com/anirudhraja/gqllinter/pkg/types"
 	"github.com/nishant-rn/gqlparser/v2/ast"
 )
@@ -43,6 +44,7 @@ func (r *UnsupportedDirectives) Check(schema *ast.Schema, source *ast.Source) []
 		"specifiedBy":   true,
 		"defer":         true,
 		"oneOf":         true,
+		"proto":         true,
 	}
 
 	for _, dir := range schema.Directives {
