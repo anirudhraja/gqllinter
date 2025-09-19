@@ -60,7 +60,7 @@ func (r *InputName) checkFields(fields ast.FieldList, operationType string, sour
 				arg := field.Arguments[0]
 
 				// Check if the argument is named "request"
-				if arg.Name != "request" {
+				if arg.Name != "input" {
 					line, column := 1, 1
 					if arg.Position != nil {
 						line = arg.Position.Line
@@ -68,7 +68,7 @@ func (r *InputName) checkFields(fields ast.FieldList, operationType string, sour
 					}
 
 					errors = append(errors, types.LintError{
-						Message: fmt.Sprintf("%s `%s` argument should be named 'request', not '%s'.", operationType, field.Name, arg.Name),
+						Message: fmt.Sprintf("%s `%s` argument should be named 'input', not '%s'.", operationType, field.Name, arg.Name),
 						Location: types.Location{
 							Line:   line,
 							Column: column,
@@ -109,7 +109,7 @@ func (r *InputName) checkFields(fields ast.FieldList, operationType string, sour
 
 				//expectedInputType := r.capitalizeFirst(field.Name) + "Request"
 				errors = append(errors, types.LintError{
-					Message: fmt.Sprintf("%s `%s` has %d arguments. Consider consolidating into a single 'request' argument of a properly named input type (not %sRequest).", operationType, field.Name, len(field.Arguments), r.capitalizeFirst(field.Name)),
+					Message: fmt.Sprintf("%s `%s` has %d arguments. Consider consolidating into a single 'input' argument of a properly named input type (not %sRequest).", operationType, field.Name, len(field.Arguments), r.capitalizeFirst(field.Name)),
 					Location: types.Location{
 						Line:   line,
 						Column: column,

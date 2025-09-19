@@ -730,13 +730,13 @@ func TestInputName(t *testing.T) {
 	t.Run("should flag input types with Request suffix", func(t *testing.T) {
 		schema := `
 		type Query {
-			getUser(request: GetUserRequest!): User
-			listUsers(request: ListUsersRequest!): [User!]!
+			getUser(input: GetUserRequest!): User
+			listUsers(input: ListUsersRequest!): [User!]!
 		}
 
 		type Mutation {
-			createUser(request: CreateUserRequest!): User!
-			updateUser(request: UpdateUserRequest!): User!
+			createUser(input: CreateUserRequest!): User!
+			updateUser(input: UpdateUserRequest!): User!
 		}
 
 		type User {
@@ -774,12 +774,12 @@ func TestInputName(t *testing.T) {
 	t.Run("should flag versioned Request input types", func(t *testing.T) {
 		schema := `
 		type Query {
-			getUser(request: GetUserRequestV2!): User
-			listUsers(request: ListUsersRequestVersion3!): [User!]!
+			getUser(input: GetUserRequestV2!): User
+			listUsers(input: ListUsersRequestVersion3!): [User!]!
 		}
 
 		type Mutation {
-			createUser(request: CreateUserRequestV1!): User!
+			createUser(input: CreateUserRequestV1!): User!
 		}
 
 		type User {
@@ -832,7 +832,7 @@ func TestInputName(t *testing.T) {
 	t.Run("should flag incorrect argument names and Request suffix types", func(t *testing.T) {
 		schema := `
 		type Query {
-			getUser(input: GetUserRequest!): User
+			getUser(request: GetUserRequest!): User
 			listUsers(params: ListUsersRequest!): [User!]!
 		}
 
@@ -866,12 +866,12 @@ func TestInputName(t *testing.T) {
 	t.Run("should pass with proper input type names without Request suffix", func(t *testing.T) {
 		schema := `
 		type Query {
-			getUser(request: UserInput!): User
-			listUsers(request: UsersFilter!): [User!]!
+			getUser(input: UserInput!): User
+			listUsers(input: UsersFilter!): [User!]!
 		}
 
 		type Mutation {
-			createUser(request: NewUserData!): User!
+			createUser(input: NewUserData!): User!
 		}
 
 		type User {
@@ -921,13 +921,13 @@ func TestInputName(t *testing.T) {
 	t.Run("should handle mixed valid and invalid cases", func(t *testing.T) {
 		schema := `
 		type Query {
-			getUser(request: GetUserRequest!): User
+			getUser(input: GetUserRequest!): User
 			listUsers(input: ListUsersRequest!): [User!]!
 			searchUsers(query: String!, limit: Int): [User!]!
 		}
 
 		type Mutation {
-			createUser(request: CreateUserRequest!): User!
+			createUser(input: CreateUserRequest!): User!
 			updateUser(data: UpdateUserInput!): User!
 		}
 
@@ -954,8 +954,8 @@ func TestInputName(t *testing.T) {
 		`
 		errors := runRule(t, rule, schema)
 		errorCount := countRuleErrors(errors, "operation-input-name")
-		if errorCount != 6 {
-			t.Errorf("Expected 6 errors (3 Request suffix types + 2 wrong argument names + 1 multiple arguments), got %d", errorCount)
+		if errorCount != 5 {
+			t.Errorf("Expected 6 errors (3 Request suffix types + 1 wrong argument names + 1 multiple arguments), got %d", errorCount)
 		}
 	})
 }
