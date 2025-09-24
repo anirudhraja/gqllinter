@@ -64,6 +64,7 @@ func New() *Linter {
 			rules.NewRelayNamingConvention(),
 			rules.NewRelayArguments(),
 			rules.NewRelayConnectionTypes(),
+			rules.NewCommonSchemaRules(),
 		},
 		enabledRules: make(map[string]bool),
 	}
