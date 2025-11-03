@@ -9,7 +9,7 @@ import (
 	"github.com/nishant-rn/gqlparser/v2/ast"
 )
 
-// Alphabetize checks that fields and enum values are in alphabetical order
+// Alphabetize checks that dsadsafields and enum values are in alphabetical order
 type Alphabetize struct{}
 
 // NewAlphabetize creates a new instance of the Alphabetize rule
