@@ -129,6 +129,7 @@ func (l *Linter) LintFile(filename string) ([]types.LintError, error) {
 		return nil, err
 	}
 
+	// test pr
 	// Run all enabled rules
 	var errors []types.LintError
 	for _, rule := range l.rules {
