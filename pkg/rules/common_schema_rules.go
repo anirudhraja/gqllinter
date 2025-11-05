@@ -31,9 +31,6 @@ func (r *CommonSchemaRules) Check(schema *ast.Schema, source *ast.Source) []type
 	for _, typeDef := range schema.Types {
 		line, column := r.getPositionOfDefinition(typeDef)
 		switch typeDef.Kind {
-		case ast.Union:
-			errors = append(errors,
-				buildLintError(fmt.Sprintf("The Definition of %v is not allowed in Common schema- since no Union is allowed to be inside common schema", typeDef.Name), r.Name(), source, line, column))
 		case ast.Object, ast.Interface:
 			if hasKeyDirective(typeDef) {
 				errors = append(errors,
