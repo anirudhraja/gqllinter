@@ -55,7 +55,7 @@ func (r *QueryResponseNullable) Check(schema *ast.Schema, source *ast.Source) []
 			errors = append(errors, types.LintError{
 				Message: fmt.Sprintf(
 					"Query root field `%s` should be nullable (`%s` instead of `%s`) to prevent nulling out entire query response due to missing data.",
-					field.Name, suggestion, r.typeToString(field.Type),
+					field.Name, suggestion, field.Type.String(),
 				),
 				Location: types.Location{
 					Line:   line,
@@ -72,32 +72,11 @@ func (r *QueryResponseNullable) Check(schema *ast.Schema, source *ast.Source) []
 
 // makeNullable converts a non-null type to nullable
 func (r *QueryResponseNullable) makeNullable(fieldType *ast.Type) string {
-	typeStr := r.typeToString(fieldType)
-
+	typeStr := fieldType.String()
 	// Remove the ! at the end if present
 	if strings.HasSuffix(typeStr, "!") {
 		return typeStr[:len(typeStr)-1]
 	}
 
 	return typeStr
-}
-
-// typeToString converts an AST type to its string representation
-func (r *QueryResponseNullable) typeToString(fieldType *ast.Type) string {
-	if fieldType.NamedType != "" {
-		if fieldType.NonNull {
-			return fieldType.NamedType + "!"
-		}
-		return fieldType.NamedType
-	}
-
-	if fieldType.Elem != nil {
-		innerStr := r.typeToString(fieldType.Elem)
-		if fieldType.NonNull {
-			return "[" + innerStr + "]!"
-		}
-		return "[" + innerStr + "]"
-	}
-
-	return "Unknown"
 }
