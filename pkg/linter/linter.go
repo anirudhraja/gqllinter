@@ -50,6 +50,7 @@ func New() *Linter {
 			rules.NewListNonNullItems(),
 			rules.NewEnumReservedValues(),
 			rules.NewMutationResponseNullable(),
+			rules.NewQueryResponseNullable(),
 			rules.NewOperationResponseName(),
 			rules.NewFieldsNullableExceptId(),
 			rules.NewRelayPageInfo(),
