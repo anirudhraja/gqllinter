@@ -1307,7 +1307,7 @@ func TestEnumReservedValues(t *testing.T) {
 func TestMutationResponseNullable(t *testing.T) {
 	rule := NewMutationResponseNullable()
 
-	t.Run("should flag non-null mutation response fields", func(t *testing.T) {
+	t.Run("should flag root level non-null mutation response fields", func(t *testing.T) {
 		schema := `
 		type Mutation {
 			createUser: CreateUserResult!
@@ -1324,42 +1324,42 @@ func TestMutationResponseNullable(t *testing.T) {
 		}
 		`
 		errors := runRule(t, rule, schema)
-		if countRuleErrors(errors, "mutation-response-nullable") != 3 {
-			t.Error("Expected exactly 3 errors for non-null response fields")
+		if countRuleErrors(errors, "mutation-response-nullable") != 1 {
+			t.Error("Expected exactly 1 error for non-null response fields")
 		}
 
 		// Check specific error messages for response fields
-		expectedFields := []string{"user", "success", "message"}
+		expectedFields := []string{"createUser"}
 		for _, field := range expectedFields {
 			found := false
 			for _, err := range errors {
 				if err.Rule == "mutation-response-nullable" &&
-					strings.Contains(err.Message, fmt.Sprintf("Mutation response field `CreateUserResult.%s`", field)) {
+					strings.Contains(err.Message, fmt.Sprintf("Mutation root field `%s`", field)) {
 					found = true
 					break
 				}
 			}
 			if !found {
-				t.Errorf("Expected error for non-null response field %s", field)
+				t.Errorf("Expected error for non-null root response field %s", field)
 			}
 		}
 	})
 
-	t.Run("should pass valid mutation with non-null return and nullable response fields", func(t *testing.T) {
+	t.Run("should pass valid mutation with nullable root fields irrespective of response type fields", func(t *testing.T) {
 		schema := `
 		type Mutation {
-			createUser: CreateUserResult!
-			updateUser: UpdateUserResult!
+			createUser: CreateUserResult
+			updateUser: UpdateUserResult
 		}
 
 		type CreateUserResult {
 			user: User
-			success: Boolean
+			success: Boolean!
 			errors: [String]
 		}
 
 		type UpdateUserResult {
-			user: User
+			user: User!
 			message: String
 		}
 
@@ -1377,69 +1377,53 @@ func TestMutationResponseNullable(t *testing.T) {
 	t.Run("should handle mutations returning scalars", func(t *testing.T) {
 		schema := `
 		type Mutation {
-			deleteUser: Boolean!
-			getUserCount: Int!
+			deleteUser: Boolean
+			getUserCount: Int
 		}
 		`
 		errors := runRule(t, rule, schema)
-		// No response type fields to check, only mutation fields themselves
 		if countRuleErrors(errors, "mutation-response-nullable") > 0 {
 			t.Error("Expected no errors for scalar mutation returns")
 		}
 	})
 
-	//t.Run("should handle list types in mutation responses", func(t *testing.T) {
-	//	schema := `
-	//	type Mutation {
-	//		createUsers: CreateUsersResult!
-	//	}
-	//
-	//	type CreateUsersResult {
-	//		users: [User!]!
-	//		errors: [String!]!
-	//		successCount: Int!
-	//	}
-	//
-	//	type User {
-	//		id: ID!
-	//	}
-	//	`
-	//	errors := runRule(t, rule, schema)
-	//	if countRuleErrors(errors, "mutation-response-nullable") != 3 {
-	//		t.Error("Expected exactly 3 errors for non-null list response fields")
-	//	}
-	//})
-
-	t.Run("should handle nested object types", func(t *testing.T) {
+	t.Run("should handle list types in mutation responses", func(t *testing.T) {
 		schema := `
 		type Mutation {
-			createOrder: CreateOrderResult!
+			createUsers: [CreateUsersResult!]!
+			updateUsers: [CreateUsersResult!]
+  			createProfile: [[String!]!]!
 		}
-
-		type CreateOrderResult {
-			order: Order!
-			payment: Payment!
+	
+		type CreateUsersResult {
+			users: [User!]!
+			errors: [String!]!
+			successCount: Int!
 		}
-
-		type Order {
+	
+		type User {
 			id: ID!
-			items: [OrderItem!]!
-		}
-
-		type Payment {
-			id: ID!
-			amount: Float!
-		}
-
-		type OrderItem {
-			id: ID!
-			quantity: Int!
 		}
 		`
 		errors := runRule(t, rule, schema)
-		// Should only flag CreateOrderResult fields, not nested type fields
 		if countRuleErrors(errors, "mutation-response-nullable") != 2 {
-			t.Errorf("Expected exactly 2 errors for CreateOrderResult fields, got %d", countRuleErrors(errors, "mutation-response-nullable"))
+			t.Error("Expected exactly 1 error for non-null list type root fields")
+		}
+
+		// Check specific error messages for response fields
+		expectedFields := []string{"createUsers", "createProfile"}
+		for _, field := range expectedFields {
+			found := false
+			for _, err := range errors {
+				if err.Rule == "mutation-response-nullable" &&
+					strings.Contains(err.Message, fmt.Sprintf("Mutation root field `%s`", field)) {
+					found = true
+					break
+				}
+			}
+			if !found {
+				t.Errorf("Expected error for non-null root response field %s", field)
+			}
 		}
 	})
 
@@ -1462,12 +1446,7 @@ func TestMutationResponseNullable(t *testing.T) {
 	t.Run("should handle union and interface return types", func(t *testing.T) {
 		schema := `
 		type Mutation {
-			createContent: CreateContentResult!
-		}
-
-		type CreateContentResult {
-			content: Content!
-			success: Boolean!
+			createContent: Content!
 		}
 
 		union Content = Article | Video
@@ -1483,8 +1462,8 @@ func TestMutationResponseNullable(t *testing.T) {
 		}
 		`
 		errors := runRule(t, rule, schema)
-		if countRuleErrors(errors, "mutation-response-nullable") < 2 {
-			t.Error("Expected at least 2 errors for non-null response fields with union types")
+		if countRuleErrors(errors, "mutation-response-nullable") != 1 {
+			t.Error("Expected at least 1 error for non-null root field of union type")
 		}
 	})
 }
