@@ -30,9 +30,14 @@ func (r *TypesHaveDescriptions) Description() string {
 func (r *TypesHaveDescriptions) Check(schema *ast.Schema, source *ast.Source) []types.LintError {
 	var errors []types.LintError
 
-	// Check object types
+	isRootType := collectRootTypeNames(schema)
+
 	for _, def := range schema.Types {
-		if def.Description == "" && !def.BuiltIn {
+		// skip built-ins and root operation types
+		if def.BuiltIn || isRootType[def.Name] {
+			continue
+		}
+		if def.Description == "" {
 			inputArr := strings.Split(def.Position.Src.Input, "\n")
 			pos := def.Position.Line - 1
 			// description with (""") is not supported by GQL for extend type* - hence skipping
@@ -60,6 +65,24 @@ func (r *TypesHaveDescriptions) Check(schema *ast.Schema, source *ast.Source) []
 	}
 
 	return errors
+}
+
+func collectRootTypeNames(schema *ast.Schema) map[string]bool {
+	names := map[string]bool{}
+	if schema == nil {
+		return names
+	}
+
+	if schema.Query != nil && schema.Query.Name != "" {
+		names[schema.Query.Name] = true
+	}
+	if schema.Mutation != nil && schema.Mutation.Name != "" {
+		names[schema.Mutation.Name] = true
+	}
+	if schema.Subscription != nil && schema.Subscription.Name != "" {
+		names[schema.Subscription.Name] = true
+	}
+	return names
 }
 
 func isExtendType(line string) bool {
