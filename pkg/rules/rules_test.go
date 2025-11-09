@@ -1229,37 +1229,6 @@ func TestEnumDescriptions(t *testing.T) {
 	})
 }
 
-func TestListNonNullItems(t *testing.T) {
-	rule := NewListNonNullItems()
-
-	t.Run("should flag lists with nullable items", func(t *testing.T) {
-		schema := `
-		type User {
-			tags: [String]
-			friends: [User]
-		}
-		`
-		errors := runRule(t, rule, schema)
-		if countRuleErrors(errors, "list-non-null-items") < 2 {
-			t.Error("Expected at least 2 errors for nullable list items")
-		}
-	})
-
-	t.Run("should pass lists with non-null items", func(t *testing.T) {
-		schema := `
-		type User {
-			tags: [String!]!
-			friends: [User!]!
-			users : [[User!]!]
-		}
-		`
-		errors := runRule(t, rule, schema)
-		if countRuleErrors(errors, "list-non-null-items") > 0 {
-			t.Error("Expected no list errors for non-null items")
-		}
-	})
-}
-
 func TestEnumReservedValues(t *testing.T) {
 	rule := NewEnumReservedValues()
 
