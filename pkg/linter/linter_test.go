@@ -59,7 +59,7 @@ func TestNew(t *testing.T) {
 	}
 
 	// Check that all expected rules are loaded
-	expectedRuleCount := 36 // Based on the rules in the New() function
+	expectedRuleCount := 37 // Based on the rules in the New() function
 	if len(linter.rules) != expectedRuleCount {
 		t.Errorf("Expected %d rules, got %d", expectedRuleCount, len(linter.rules))
 	}
