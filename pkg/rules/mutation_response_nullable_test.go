@@ -30,20 +30,8 @@ func TestMutationResponseNullable(t *testing.T) {
 			t.Error("Expected exactly 1 error for non-null response fields")
 		}
 
-		// Check specific error messages for response fields
-		expectedFields := []string{"createUser"}
-		for _, field := range expectedFields {
-			found := false
-			for _, err := range errors {
-				if err.Rule == "mutation-response-nullable" &&
-					strings.Contains(err.Message, fmt.Sprintf("Mutation root field `%s`", field)) {
-					found = true
-					break
-				}
-			}
-			if !found {
-				t.Errorf("Expected error for non-null root response field %s", field)
-			}
+		if strings.Contains(errors[0].Message, "Mutation root field `createUser`") == false {
+			t.Errorf("Expected error for non-null root response field createUser")
 		}
 	})
 
@@ -109,7 +97,7 @@ func TestMutationResponseNullable(t *testing.T) {
 		`
 		errors := runRule(t, rule, schema)
 		if countRuleErrors(errors, "mutation-response-nullable") != 2 {
-			t.Error("Expected exactly 1 error for non-null list type root fields")
+			t.Error("Expected exactly 2 errors for non-null list type root fields")
 		}
 
 		// Check specific error messages for response fields
