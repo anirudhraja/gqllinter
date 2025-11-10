@@ -30,11 +30,11 @@ func (r *TypesHaveDescriptions) Description() string {
 func (r *TypesHaveDescriptions) Check(schema *ast.Schema, source *ast.Source) []types.LintError {
 	var errors []types.LintError
 
-	isRootType := collectRootTypeNames(schema)
+	rootTypeNames := collectRootTypeNames(schema)
 
 	for _, def := range schema.Types {
 		// skip built-ins and root operation types
-		if def.BuiltIn || isRootType[def.Name] {
+		if def.BuiltIn || rootTypeNames[def.Name] {
 			continue
 		}
 		if def.Description == "" {
@@ -67,6 +67,7 @@ func (r *TypesHaveDescriptions) Check(schema *ast.Schema, source *ast.Source) []
 	return errors
 }
 
+// collectRootTypeNames gathers the names of root operation types (Query, Mutation, Subscription)
 func collectRootTypeNames(schema *ast.Schema) map[string]bool {
 	names := map[string]bool{}
 	if schema == nil {
