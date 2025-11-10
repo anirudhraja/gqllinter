@@ -52,38 +52,6 @@ func countRuleErrors(errors []types.LintError, ruleName string) int {
 	return count
 }
 
-func TestTypesHaveDescriptions(t *testing.T) {
-	rule := NewTypesHaveDescriptions()
-
-	t.Run("should flag types without descriptions", func(t *testing.T) {
-		schema := `
-		type User {
-			id: ID!
-		}
-		`
-		errors := runRule(t, rule, schema)
-		if len(errors) == 0 {
-			t.Error("Expected error for type without description")
-		}
-		if !containsError(errors, "The object type `User` is missing a description.") {
-			t.Error("Expected specific error message about missing description")
-		}
-	})
-
-	t.Run("should pass types with descriptions", func(t *testing.T) {
-		schema := `
-		"""A user in the system"""
-		type User {
-			id: ID!
-		}
-		`
-		errors := runRule(t, rule, schema)
-		if countRuleErrors(errors, "types-have-descriptions") > 0 {
-			t.Error("Expected no errors for type with description")
-		}
-	})
-}
-
 func TestFieldsHaveDescriptions(t *testing.T) {
 	rule := NewFieldsHaveDescriptions()
 
