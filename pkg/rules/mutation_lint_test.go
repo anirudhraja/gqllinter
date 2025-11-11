@@ -95,7 +95,7 @@ func TestMutationLint(t *testing.T) {
 				}
 
 				type Mutation {
-					resolveMobileRiders(id: ID!): MockMobileRider!
+					resolveMobileRiders(id: ID!): MockMobileRider
 				}
 			`,
 			expectedErrors: 1,
@@ -175,7 +175,7 @@ func TestMutationLint(t *testing.T) {
 				}
 
 				type Mutation {
-					resolveMobileRiders(id: ID!): MobileRiders!
+					resolveMobileRiders(id: ID!): MobileRiders
 				}
 			`,
 			expectedErrors: 1,
@@ -314,7 +314,7 @@ func TestMutationLint(t *testing.T) {
 
 				type Mutation {
 					mutation1(id: ID!): BadUnion1!
-					mutation2(id: ID!): BadUnion2!
+					mutation2(id: ID!): BadUnion2
 					mutation3(id: ID!): Success1!
 				}
 			`,
