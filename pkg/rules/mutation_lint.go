@@ -84,19 +84,6 @@ func (r *MutationLint) validateMutationResponseUnions(schema *ast.Schema, source
 			})
 			continue
 		}
-		// should be non-null type
-		if !field.Type.NonNull {
-			errors = append(errors, types.LintError{
-				Message: fmt.Sprintf("Mutation field '%s' must return a non-null union type with @responseUnion directive, but returns '%s'", field.Name, returnTypeName),
-				Location: types.Location{
-					Line:   field.Position.Line,
-					Column: field.Position.Column,
-					File:   source.Name,
-				},
-				Rule: r.Name(),
-			})
-			continue
-		}
 
 		// Check if the union has @responseUnion directive
 		if !r.hasResponseUnionDirective(returnType) {
