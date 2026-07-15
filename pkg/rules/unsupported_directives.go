@@ -46,7 +46,7 @@ func (r *UnsupportedDirectives) Check(schema *ast.Schema, source *ast.Source) []
 		"oneOf":         true,
 		"proto":         true,
 		"thrift":        true,
-		"susbscription": true,
+		"subscription":  true,
 	}
 
 	for _, dir := range schema.Directives {
