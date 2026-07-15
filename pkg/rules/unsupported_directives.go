@@ -31,21 +31,22 @@ func (r *UnsupportedDirectives) Check(schema *ast.Schema, source *ast.Source) []
 
 	// Map of supported directives
 	supportedDirectivesMap := map[string]bool{
-		"link":           true,
-		"key":            true,
-		"shareable":      true,
-		"external":       true,
-		"error":          true,
-		"throws":         true,
-		"responseUnion":  true,
-		"include":        true,
-		"skip":           true,
-		"deprecated":     true,
-		"specifiedBy":    true,
-		"oneOf":          true,
-		"proto":          true,
-		"thrift":         true,
-		"susbscriptions": true,
+		"link":          true,
+		"key":           true,
+		"shareable":     true,
+		"external":      true,
+		"error":         true,
+		"throws":        true,
+		"responseUnion": true,
+		"include":       true,
+		"skip":          true,
+		"deprecated":    true,
+		"specifiedBy":   true,
+		"defer":         true,
+		"oneOf":         true,
+		"proto":         true,
+		"thrift":        true,
+		"susbscription": true,
 	}
 
 	for _, dir := range schema.Directives {
