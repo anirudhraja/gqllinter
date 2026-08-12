@@ -66,6 +66,7 @@ func New() *Linter {
 			rules.NewRelayArguments(),
 			rules.NewRelayConnectionTypes(),
 			rules.NewCommonSchemaRules(),
+			rules.NewLinkViaTypesNotIds(),
 		},
 		enabledRules: make(map[string]bool),
 	}
